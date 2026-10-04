@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriorityParking UTP - Lima Centro</title>
+    <style>
+        :root {
+            --disponible: #2ecc71; /* Verde */
+            --reservado: #f1c40f;  /* Amarillo */
+            --ocupado: #e74c3c;    /* Rojo */
+            --mantenimiento: #7f8c8d; /* Gris */
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 { color: #002f6c; margin-bottom: 5px; }
+        .sub { color: #555; margin-bottom: 30px; }
+        
+        /* Contenedor del Mapa Visual */
+        .mapa-cochera {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Diseño de cada espacio de parqueo */
+        .espacio {
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            padding: 20px 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: #fff;
+        }
+        .espacio:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Clases dinámicas por estado */
+        .DISPONIBLE { background-color: var(--disponible); border-color: #27ae60; }
+        .RESERVADO { background-color: var(--reservado); border-color: #f39c12; color: #333; }
+        .OCUPADO { background-color: var(--ocupado); border-color: #c0392b; }
+        .MANTENIMIENTO { background-color: var(--mantenimiento); border-color: #7f8c8d; cursor: not-allowed; }
+
+        /* Leyenda */
+        .leyenda {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+        .item-leyenda { display: flex; align-items: center; gap: 8px; }
+        .cuadro { width: 16px; height: 16px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <h1>PriorityParking UTP</h1>
+    <p class="sub">Distribución de espacios en Tiempo Real - Sede Lima Centro</p>
+
+    <!-- Contenedor donde JS inyectará los espacios de la BD -->
+    <div class="mapa-cochera" id="gridMapa">
+        <!-- Los espacios se renderizan dinámicamente -->
+    </div>
+
+    <!-- Leyenda de colores interactiva -->
+    <div class="leyenda">
+        <div class="item-leyenda"><div class="cuadro DISPONIBLE"></div> Libre (Apto)</div>
+        <div class="item-leyenda"><div class="cuadro RESERVADO"></div> Reservado</div>
+        <div class="item-leyenda"><div class="cuadro OCUPADO"></div> Ocupado</div>
+        <div class="item-leyenda"><div class="cuadro MANTENIMIENTO"></div> Bloqueado</div>
+    </div>
+
+    <script>
+        // Simulación de carga de datos desde el API de Garita/Estudiantes
+        async function cargarMapa() {
+            const grid = document.getElementById('gridMapa');
+            try {
+                // En producción: const res = await fetch('/api/garita/espacios'); const espacios = await res.json();
+                const espacios Mock = [
+                    { id_espacio: 'LC-P1-01', estado: 'DISPONIBLE' },
+                    { id_espacio: 'LC-P1-02', estado: 'RESERVADO' },
+                    { id_espacio: 'LC-P1-03', estado: 'OCUPADO' },
+                    { id_espacio: 'LC-P1-04', estado: 'DISPONIBLE' },
+                    { id_espacio: 'LC-P1-05', estado: 'MANTENIMIENTO' }
+                ];
+
+                grid.innerHTML = '';
+                espaciosMock.forEach(slot => {
+                    const div = document.createElement('div');
+                    div.className = `espacio ${slot.estado}`;
+                    div.innerHTML = `${slot.id_espacio}<br><small>${slot.estado}</small>`;
+                    
+                    if(slot.estado === 'DISPONIBLE') {
+                        div.onclick = () => reservarEspacio(slot.id_espacio);
+                    }
+                    grid.appendChild(div);
+                });
+            } catch (error) {
+                grid.innerHTML = '<p>Error al conectar con el servidor de mapas.</p>';
+            }
+        }
+
+        function reservarEspacio(id) {
+            alert(`Solicitando reserva para el espacio: ${id}. Se enviará el código OTP a tu correo institucional.`);
+        }
+
+        // Inicializar el mapa al cargar la página
+        window.onload = cargarMapa;
+    </script>
+</body>
+</html>
