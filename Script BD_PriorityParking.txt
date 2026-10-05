@@ -1,0 +1,94 @@
+-- 1. TABLA DE ESTUDIANTES (Alimentada diariamente a las 3:00 AM por el ETL UTP)
+CREATE TABLE estudiantes_habilitados (
+    id_estudiante SERIAL PRIMARY KEY,
+    codigo_alumno VARCHAR(15) UNIQUE NOT NULL,      -- Ej: 'U20304050'
+    correo_institucional VARCHAR(100) UNIQUE NOT NULL, -- Ej: 'U20304050@utp.edu.pe'
+    nombre_completo VARCHAR(150) NOT NULL,
+    esta_al_dia_pagos BOOLEAN DEFAULT TRUE,          -- Regla de Negocio 1
+    porcentaje_asistencia NUMERIC(5,2) NOT NULL,    -- Regla de Negocio 2
+    promedio_ponderado NUMERIC(4,2) NOT NULL,       -- Regla de Negocio 3
+    es_apto_parking BOOLEAN GENERATED ALWAYS AS (
+        (esta_al_dia_pagos = TRUE) AND (porcentaje_asistencia >= 70.00) AND (promedio_ponderado >= 14.00)
+    ) STORED, -- Calcula automáticamente si cumple el perfil 'Priority'
+    ultima_actualizacion_etl TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Crear índice para que la búsqueda por correo en hora punta sea instantánea
+CREATE INDEX idx_estudiantes_correo ON estudiantes_habilitados(correo_institucional);
+
+
+-- 2. TABLA DE ESPACIOS DE ESTACIONAMIENTO (Específica para Lima Centro)
+CREATE TABLE espacios_estacionamiento (
+    id_espacio VARCHAR(10) PRIMARY KEY,              -- Ej: 'LC-P1-01' (Lima Centro - Piso 1 - Slot 1)
+    piso INT NOT NULL,                               -- Ej: 1, 2, 3
+    numero_slot INT NOT NULL,
+    estado VARCHAR(20) DEFAULT 'DISPONIBLE',         -- 'DISPONIBLE', 'RESERVADO', 'OCUPADO', 'MANTENIMIENTO'
+    tipo_vehiculo VARCHAR(20) DEFAULT 'AUTO'         -- 'AUTO', 'MOTO'
+);
+
+
+-- 3. TABLA DE RESERVAS DEL DÍA
+CREATE TABLE reservas (
+    id_reserva SERIAL PRIMARY KEY,
+    codigo_alumno VARCHAR(15) REFERENCES estudiantes_habilitados(codigo_alumno),
+    id_espacio VARCHAR(10) REFERENCES espacios_estacionamiento(id_espacio),
+    codigo_otp_usado VARCHAR(6) NOT NULL,
+    fecha_reserva DATE DEFAULT CURRENT_DATE,
+    hora_reserva TIME DEFAULT CURRENT_TIME,
+    estado_reserva VARCHAR(20) DEFAULT 'PENDIENTE', -- 'PENDIENTE' (Reservado), 'COMPLETADA' (En Garita), 'EXPIRADA'
+    CONSTRAINT unica_reserva_por_dia_alumno UNIQUE (codigo_alumno, fecha_reserva) -- Evita doble reserva el mismo día
+);
+
+-- 1. IDENTIFICAR E INYECTAR ADVERTENCIAS / SUSPENSIONES (Ejecutado diariamente a las 11:15 PM)
+-- Pone en marcha la regla: Si acumula 2 'No-Shows', se le bloquea en la lista blanca local.
+
+-- Tabla auxiliar que debe añadirse al script de base de datos original:
+CREATE TABLE historial_penalizaciones (
+    id_penalizacion SERIAL PRIMARY KEY,
+    codigo_alumno VARCHAR(15) REFERENCES estudiantes_habilitados(codigo_alumno),
+    fecha_inicio DATE DEFAULT CURRENT_DATE,
+    fecha_fin DATE,
+    motivo VARCHAR(100) NOT NULL,
+    estado_activo BOOLEAN DEFAULT TRUE
+);
+
+-- Query automático que genera el bloqueo temporal de 7 días para reincidentes:
+INSERT INTO historial_penalizaciones (codigo_alumno, fecha_fin, motivo)
+SELECT codigo_alumno, CURRENT_DATE + INTERVAL '7 days', 'Reincidencia de No-Show (2 veces consecutivas)'
+FROM reservas
+WHERE estado_reserva = 'PENDIENTE' AND fecha_reserva = CURRENT_DATE
+GROUP BY codigo_alumno
+HAVING COUNT(id_reserva) >= 2
+ON CONFLICT DO NOTHING;
+
+
+
+
+-- INSERTAR ESTUDIANTES DE PRUEBA (Simulación del resultado del ETL nocturno)
+INSERT INTO estudiantes_habilitados 
+(codigo_alumno, correo_institucional, nombre_completo, esta_al_dia_pagos, porcentaje_asistencia, promedio_ponderado)
+VALUES 
+-- Caso 1: Alumno Excelente (Cumple todas las reglas -> Será APTO automáticamente)
+('U20304050', 'U20304050@utp.edu.pe', 'Carlos Mendoza Ruiz', TRUE, 85.50, 16.20),
+
+-- Caso 2: Alumno Invencible en notas pero con deuda financiera (Falla Pagos -> NO APTO)
+('U19203040', 'U19203040@utp.edu.pe', 'Ana Flores Portugal', FALSE, 92.00, 17.50),
+
+-- Caso 3: Alumno al día en pagos pero con demasiadas faltas (Falla Asistencia -> NO APTO)
+('U21345678', 'U21345678@utp.edu.pe', 'Kevin Quispe Ludeña', TRUE, 55.00, 14.80),
+
+-- Caso 4: Alumno regular que cumple con lo justo (Paga al día, 75% asistencia, promedio 14 -> APTO)
+('U22109876', 'U22109876@utp.edu.pe', 'Sofia Ramos Benitez', TRUE, 75.00, 14.00);
+
+
+-- INSERTAR MAPA DE ESTACIONAMIENTOS INICIALES (Sede Lima Centro - Piso 1)
+INSERT INTO espacios_estacionamiento (id_espacio, piso, numero_slot, estado, tipo_vehiculo)
+VALUES 
+('LC-P1-01', 1, 1, 'DISPONIBLE', 'AUTO'),
+('LC-P1-02', 1, 2, 'DISPONIBLE', 'AUTO'),
+('LC-P1-03', 1, 3, 'RESERVADO',  'AUTO'), -- Simula un espacio ya apartado
+('LC-P1-04', 1, 4, 'OCUPADO',    'AUTO'), -- Simula un carro físicamente estacionado
+('LC-P1-05', 1, 5, 'DISPONIBLE', 'AUTO'),
+('LC-P1-06', 1, 6, 'DISPONIBLE', 'MOTO'),
+('LC-P1-07', 1, 7, 'DISPONIBLE', 'MOTO'),
+('LC-P1-08', 1, 8, 'MANTENIMIENTO', 'AUTO'); -- Espacio bloqueado por la UTP

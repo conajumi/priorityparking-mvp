@@ -1,0 +1,47 @@
+// src/public/index.html (Sección de Scripts de Control)
+
+/**
+ * Función encargada de enviar el correo institucional al backend 
+ * para iniciar el flujo de validación y generación del código OTP.
+ */
+async function solicitarAccesoParking(event) {
+    event.preventDefault(); // Evita que la página web se recargue por defecto
+    
+    const inputCorreo = document.getElementById('correoEstudiante').value;
+    const zonaMensajes = document.getElementById('zonaMensajesError'); // Div para mostrar errores en pantalla
+
+    try {
+        // Realizamos la llamada asíncrona hacia el endpoint que creamos
+        const respuesta = await fetch('/api/auth/solicitar-otp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ correo: inputCorreo })
+        });
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            // Si el backend devuelve un error (Nivel 400, 403, 404), lo pintamos en el diseño
+            zonaMensajes.style.color = '#e74c3c'; // Rojo
+            zonaMensajes.innerText = datos.error;
+            return;
+        }
+
+        // Si la validación es exitosa (Estado 200 OK)
+        zonaMensajes.style.color = '#2ecc71'; // Verde
+        zonaMensajes.innerText = `${datos.mensaje} (Código de alumno detectado: ${datos.codigoAlumno})`;
+        
+        // Pasamos al siguiente paso en tu Mockup: Mostrar el recuadro para digitar el código de 6 dígitos
+        document.getElementById('seccionIngresoOtp').style.display = 'block';
+
+    } catch (error) {
+        console.error('Error de red en el Frontend:', error);
+        zonaMensajes.style.color = '#e74c3c';
+        zonaMensajes.innerText = 'No se pudo conectar con el servidor de PriorityParking. Revisa tu conexión local.';
+    }
+}
+
+// Ejemplo de cómo amarrarlo al evento 'submit' de tu formulario web:
+// document.getElementById('formLoginParking').addEventListener('submit', solicitarAccesoParking);
