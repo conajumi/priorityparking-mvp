@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriorityParking MVP - Panel de Garita</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a202c; margin: 0; padding: 20px; color: #e2e8f0; }
+        .container { max-width: 800px; background: #2d3748; margin: 20px auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h2 { color: #63b3ed; text-align: center; border-bottom: 2px solid #4a5568; padding-bottom: 10px; margin-top: 0; }
+        h3 { color: #90cdf4; border-bottom: 1px solid #4a5568; padding-bottom: 5px; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #cbd5e0; }
+        input { width: 100%; padding: 10px; background: #4a5568; border: 1px solid #718096; border-radius: 6px; color: white; box-sizing: border-box; font-size: 16px; }
+        input::placeholder { color: #a0aec0; }
+        button { width: 100%; padding: 12px; background: #3182ce; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #2b6cb0; }
+        .btn-liberar { background: #e53e3e; margin-top: 8px; padding: 6px 12px; font-size: 14px; }
+        .btn-liberar:hover { background: #c53030; }
+        .alert { padding: 12px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; text-align: center; }
+        .error { background: #fed7d7; color: #9b2c2c; }
+        .success { background: #c6f6d5; color: #22543d; }
+        .map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+        .slot { border: 2px solid #4a5568; padding: 15px; text-align: center; border-radius: 8px; font-weight: bold; background: #2d3748; }
+        .DISPONIBLE { border-color: #38a169; color: #48bb78; }
+        .RESERVADO { border-color: #dd6b20; color: #ed8936; }
+        .OCUPADO { border-color: #e53e3e; color: #f56565; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>👮 Control de Garita - Sede Lima Centro</h2>
+        <div id="globalAlert" class="alert hidden"></div>
+
+        <div class="grid-layout">
+            <!-- Bloque de Acciones Rápidas -->
+            <div>
+                <h3>📥 Registrar Ingreso Físico</h3>
+                <div class="form-group">
+                    <label for="codigo_alumno">Código de Alumno</label>
+                    <input type="text" id="codigo_alumno" placeholder="Ej: U20304050">
+                </div>
+                <div class="form-group">
+                    <label for="id_espacio">ID de Espacio (Slot)</label>
+                    <input type="text" id="id_espacio" placeholder="Ej: LC-P1-01">
+                </div>
+                <button onclick="registrarIngreso()">Validar e Ingresar</button>
+            </div>
+
+            <!-- Información Operativa -->
+            <div>
+                <h3>📊 Resumen de Planta</h3>
+                <p>Usa este panel para autorizar la entrada de vehículos con reserva activa o liberar los espacios manualmente cuando se retiren del campus.</p>
+                <button onclick="cargarMapaMonitoreo()" style="background: #4a5568;">🔄 Refrescar Monitor</button>
+            </div>
+        </div>
+
+        <h3>🗺️ Monitor de Estacionamientos en Tiempo Real</h3>
+        <div id="monitorMapa" class="map-grid"></div>
+    </div>
+
+    <script>
+        function mostrarAlerta(mensaje, tipo) {
+            const el = document.getElementById('globalAlert');
+            el.innerText = mensaje;
+            el.className = `alert ${tipo}`;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 5000);
+        }
+
+        // GET /api/garita/espacios
+        async function cargarMapaMonitoreo() {
+            const container = document.getElementById('monitorMapa');
+            container.innerHTML = '<p style="grid-column: span 3; text-align:center;">Consultando base de datos...</p>';
+            try {
+                const res = await fetch('/api/garita/espacios');
+                const espacios = await res.json();
+                container.innerHTML = '';
+
+                espacios.forEach(espacio => {
+                    const div = document.createElement('div');
+                    div.className = `slot ${espacio.estado}`;
+                    
+                    let contenidoHTML = `
+                        <div>${espacio.id_espacio}</div>
+                        <small style="text-transform: uppercase;">${espacio.estado}</small>
+                    `;
+
+                    // Si el espacio está ocupado, le da al vigilante el botón rápido de liberación
+                    if (espacio.estado === 'OCUPADO') {
+                        contenidoHTML += `<button class="btn-liberar" onclick="registrarSalida('${espacio.id_espacio}')">Liberar Slot</button>`;
+                    }
+
+                    div.innerHTML = contenidoHTML;
+                    container.appendChild(div);
+                });
+            } catch (err) {
+                container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#f56565;">Error de sincronización con el servidor.</p>';
+            }
+        }
+
+        // POST /api/garita/registrar-ingreso
+        async function registrarIngreso() {
+            const codigo_alumno = document.getElementById('codigo_alumno').value.trim();
+            const id_espacio = document.getElementById('id_espacio').value.trim();
+
+            if (!codigo_alumno || !id_espacio) {
+                mostrarAlerta('Por favor, complete ambos campos para validar el ingreso.', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/garita/registrar-ingreso', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo_alumno, id_espacio })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'No se pudo procesar el ingreso.');
+
+                mostrarAlerta(data.mensaje, 'success');
+                document.getElementById('codigo_alumno').value = '';
+                document.getElementById('id_espacio').value = '';
+                cargarMapaMonitoreo();
+            } catch (err) {
+                mostrarAlerta(err.message, 'error');
+            }
+        }
+
+        // POST /api/garita/registrar-salida
+        async function registrarSalida(idEspacio) {
+            if (!confirm(`¿Confirmas la salida del vehículo del slot ${idEspacio}?`)) return;
+
+            try {
+                const res = await fetch('/api/garita/registrar-salida', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_espacio: idEspacio })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'No se pudo procesar la salida.');
+
+                mostrarAlerta(data.mensaje, 'success');
+                cargarMapaMonitoreo();
+            } catch (err) {
+                mostrarAlerta(err.message, 'error');
+            }
+        }
+
+        // Carga inicial
+        cargarMapaMonitoreo();
+    </script>
+</body>
+</html>

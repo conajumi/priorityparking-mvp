@@ -13,6 +13,8 @@ const reservasController = require('../modules/reservas/reservas.controller');
 // Alumno solicita el código OTP ingresando su correo institucional
 router.post('/auth/solicitar-otp', authController.solicitarOtp);
 
+// Verificacion de codigo OTP, cuando se inicia sesion con su correo le llega un codigo de 6 digitos
+router.post('/auth/verificar-otp', authController.verificarOtp);
 
 /**
  * ==========================================
@@ -28,7 +30,9 @@ router.post('/garita/registrar-ingreso', reservasController.registrarIngresoVehi
 // Registrar la salida y liberar el espacio (Vigilante presiona "Liberar" al salir el auto)
 router.post('/garita/registrar-salida', reservasController.registrarSalidaVehiculo);
 
-// Verificacion de codigo OTP, cuando se inicia sesion con su correo le llega un codigo de 6 digitos
-router.post('/auth/verificar-otp', authController.verificarOtp);
+// Crear una nueva reserva desde el panel del alumno
+router.post('/reservas/crear', reservasController.crearReservaAlumno);
+
+
 
 module.exports = router;

@@ -3,124 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PriorityParking UTP - Lima Centro</title>
+    <title>PriorityParking - Panel de Reservas</title>
     <style>
-        :root {
-            --disponible: #2ecc71; /* Verde */
-            --reservado: #f1c40f;  /* Amarillo */
-            --ocupado: #e74c3c;    /* Rojo */
-            --mantenimiento: #7f8c8d; /* Gris */
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        h1 { color: #002f6c; margin-bottom: 5px; }
-        .sub { color: #555; margin-bottom: 30px; }
-        
-        /* Contenedor del Mapa Visual */
-        .mapa-cochera {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        /* Diseño de cada espacio de parqueo */
-        .espacio {
-            border: 2px solid #bdc3c7;
-            border-radius: 6px;
-            padding: 20px 10px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            color: #fff;
-        }
-        .espacio:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-
-        /* Clases dinámicas por estado */
-        .DISPONIBLE { background-color: var(--disponible); border-color: #27ae60; }
-        .RESERVADO { background-color: var(--reservado); border-color: #f39c12; color: #333; }
-        .OCUPADO { background-color: var(--ocupado); border-color: #c0392b; }
-        .MANTENIMIENTO { background-color: var(--mantenimiento); border-color: #7f8c8d; cursor: not-allowed; }
-
-        /* Leyenda */
-        .leyenda {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 25px;
-            font-size: 14px;
-        }
-        .item-leyenda { display: flex; align-items: center; gap: 8px; }
-        .cuadro { width: 16px; height: 16px; border-radius: 4px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 700px; background: white; margin: 30px auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003366; padding-bottom: 15px; margin-bottom: 20px; }
+        h2 { color: #003366; margin: 0; }
+        .btn-logout { background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .alert { padding: 12px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; text-align: center; }
+        .error { background: #fde8e8; color: #e53e3e; border: 1px solid #f8b4b4; }
+        .success { background: #def7ec; color: #03543f; border: 1px solid #bcf0da; }
+        .map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        .slot { border: 2px solid #ccc; padding: 25px 15px; text-align: center; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .DISPONIBLE { background: #e6fffa; border-color: #319795; color: #234e52; }
+        .DISPONIBLE:hover { transform: scale(1.03); }
+        .RESERVADO { background: #feebc8; border-color: #dd6b20; color: #744210; cursor: not-allowed; }
+        .OCUPADO { background: #fed7d7; border-color: #e53e3e; color: #742a2a; cursor: not-allowed; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>PriorityParking UTP</h1>
-    <p class="sub">Distribución de espacios en Tiempo Real - Sede Lima Centro</p>
+    <div class="container">
+        <div class="header">
+            <h2>🗺️ Reserva tu Espacio - Sede Lima Centro</h2>
+            <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
+        
+        <p>Sesión activa: <span id="displayCodigo" style="font-weight: bold; color: #003366;"></span></p>
+        
+        <!-- 📅 Selección obligatoria de fecha de llegada -->
+        <div style="margin-bottom: 20px; background: #e2e8f0; padding: 15px; border-radius: 8px;">
+            <label for="fechaLlegada" style="font-weight: bold; color: #003366;">Selecciona tu Fecha de Llegada a la Sede (24h de anticipación):</label>
+            <input type="date" id="fechaLlegada" style="margin-top: 8px; padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #cbd5e0;">
+        </div>
 
-    <!-- Contenedor donde JS inyectará los espacios de la BD -->
-    <div class="mapa-cochera" id="gridMapa">
-        <!-- Los espacios se renderizan dinámicamente -->
-    </div>
-
-    <!-- Leyenda de colores interactiva -->
-    <div class="leyenda">
-        <div class="item-leyenda"><div class="cuadro DISPONIBLE"></div> Libre (Apto)</div>
-        <div class="item-leyenda"><div class="cuadro RESERVADO"></div> Reservado</div>
-        <div class="item-leyenda"><div class="cuadro OCUPADO"></div> Ocupado</div>
-        <div class="item-leyenda"><div class="cuadro MANTENIMIENTO"></div> Bloqueado</div>
+        <div id="panelAlert" class="alert hidden"></div>
+        <div class="map-grid" id="contenedorMapa">Cargando espacios...</div>
     </div>
 
     <script>
-        // Simulación de carga de datos desde el API de Garita/Estudiantes
-        async function cargarMapa() {
-            const grid = document.getElementById('gridMapa');
-            try {
-                // En producción: const res = await fetch('/api/garita/espacios'); const espacios = await res.json();
-                const espacios Mock = [
-                    { id_espacio: 'LC-P1-01', estado: 'DISPONIBLE' },
-                    { id_espacio: 'LC-P1-02', estado: 'RESERVADO' },
-                    { id_espacio: 'LC-P1-03', estado: 'OCUPADO' },
-                    { id_espacio: 'LC-P1-04', estado: 'DISPONIBLE' },
-                    { id_espacio: 'LC-P1-05', estado: 'MANTENIMIENTO' }
-                ];
+        // 1. GUARDRAIL DE SEGURIDAD PRINCIPAL
+        const codigoAlumno = sessionStorage.getItem('alumnoLogueado');
+        if (!codigoAlumno) {
+            window.location.href = '/login.html';
+        } else {
+            document.getElementById('displayCodigo').innerText = codigoAlumno;
+            configurarCalendario24h();
+            cargarMapaWeb();
+        }
 
+        // 2. FORZAR FECHA DE MAÑANA (Alineado con el control de 24h de anticipación)
+        function configurarCalendario24h() {
+            const inputFecha = document.getElementById('fechaLlegada');
+            const mañana = new Date();
+            mañana.setDate(mañana.getDate() + 1); // Añade exactamente 24 horas al día actual
+            
+            const formatoFecha = mañana.toISOString().split('T')[0];
+            inputFecha.value = formatoFecha;
+            inputFecha.min = formatoFecha; // Bloquea días pasados
+            inputFecha.max = formatoFecha; // Bloquea días posteriores para cumplir el requerimiento estricto de 24h
+        }
+
+        function cerrarSesion() {
+            sessionStorage.removeItem('alumnoLogueado');
+            window.location.href = '/login.html';
+        }
+
+        function mostrarNotificacion(texto, tipo) {
+            const box = document.getElementById('panelAlert');
+            box.innerText = texto;
+            box.className = `alert ${tipo}`;
+            box.classList.remove('hidden');
+        }
+
+        // 3. GET /api/garita/espacios
+        async function cargarMapaWeb() {
+            const grid = document.getElementById('contenedorMapa');
+            try {
+                const res = await fetch('/api/garita/espacios');
+                const espacios = await res.json();
                 grid.innerHTML = '';
-                espaciosMock.forEach(slot => {
+
+                espacios.forEach(espacio => {
                     const div = document.createElement('div');
-                    div.className = `espacio ${slot.estado}`;
-                    div.innerHTML = `${slot.id_espacio}<br><small>${slot.estado}</small>`;
+                    div.className = `slot ${espacio.estado}`;
+                    div.innerHTML = `<div>${espacio.id_espacio}</div><small style="font-size:11px; opacity:0.8;">${espacio.estado}</small>`;
                     
-                    if(slot.estado === 'DISPONIBLE') {
-                        div.onclick = () => reservarEspacio(slot.id_espacio);
+                    if(espacio.estado === 'DISPONIBLE') {
+                        div.onclick = () => solicitarReservaSlot(espacio.id_espacio);
                     }
                     grid.appendChild(div);
                 });
-            } catch (error) {
-                grid.innerHTML = '<p>Error al conectar con el servidor de mapas.</p>';
+            } catch (err) {
+                grid.innerHTML = '<p style="color:red;">Error al conectar con el servidor.</p>';
             }
         }
 
-        function reservarEspacio(id) {
-            alert(`Solicitando reserva para el espacio: ${id}. Se enviará el código OTP a tu correo institucional.`);
-        }
+        // 4. POST /api/reservas/crear (ENVIANDO FECHA DE LLEGADA)
+        async function solicitarReservaSlot(idEspacio) {
+            const fechaElegida = document.getElementById('fechaLlegada').value;
+            if(!fechaElegida) return alert('Por favor, selecciona una fecha válida.');
 
-        // Inicializar el mapa al cargar la página
-        window.onload = cargarMapa;
+            if(!confirm(`¿Confirmas separar el estacionamiento ${idEspacio} para el día ${fechaElegida}?`)) return;
+
+            try {
+                const res = await fetch('/api/reservas/crear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        codigo_alumno: codigoAlumno,
+                        id_espacio: idEspacio,
+                        otp_verificado: '000000',
+                        fecha_reserva: fechaElegida // Inyección transaccional dinámica
+                    })
+                });
+                const data = await res.json();
+
+                if(!res.ok) throw new Error(data.error || 'No se pudo procesar la reserva.');
+
+                mostrarNotificacion(data.mensaje, 'success');
+                cargarMapaWeb();
+            } catch (err) {
+                mostrarNotificacion(err.message, 'error');
+            }
+        }
     </script>
 </body>
 </html>
