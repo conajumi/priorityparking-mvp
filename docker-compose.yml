@@ -9,6 +9,7 @@ services:
       POSTGRES_USER: utp_admin
       POSTGRES_PASSWORD: SecretPasswordUTP2026
       POSTGRES_DB: priority_parking_mvp
+      TZ: "America/Lima" #FUERZA LA HORA DE PERU EN EL CONTENEDOR
     ports:
       - "5432:5432"
     volumes:

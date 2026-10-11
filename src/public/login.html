@@ -49,70 +49,77 @@
     </div>
 
     <script>
-        let codigoAlumnoDetectado = '';
+    let codigoAlumnoDetectado = '';
 
-        function mostrarMensaje(texto, tipo) {
-            const box = document.getElementById('alertBox');
-            box.innerText = texto;
-            box.className = `alert ${tipo}`;
-            box.classList.remove('hidden');
+    function mostrarMensaje(texto, tipo) {
+        const box = document.getElementById('alertBox');
+        box.innerText = texto;
+        box.className = `alert ${tipo}`;
+        box.classList.remove('hidden');
+    }
+
+    // 1. PASO A: SOLICITAR EL OTP (Revisar mayúsculas al recibir 🚀)
+    async function enviarCorreo() {
+        const correo = document.getElementById('correo').value.trim();
+        if(!correo) return mostrarMensaje('Ingresa tu correo institucional.', 'error');
+
+        try {
+            const res = await fetch('/api/auth/solicitar-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo })
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'No se pudo enviar el código.');
+
+            // 🚀 CONTROL DE MAYÚSCULAS: Coincide exactamente con 'codigoAlumno' del backend
+            codigoAlumnoDetectado = data.codigoAlumno;
+            
+            // Transición visual obligatoria al paso OTP
+            document.getElementById('groupEmail').classList.add('hidden');
+            document.getElementById('groupOtp').classList.remove('hidden');
+            mostrarMensaje(data.mensaje, 'success');
+        } catch (err) {
+            mostrarMensaje(err.message, 'error');
         }
+    }
 
-        // Ejecuta el POST a /api/auth/solicitar-otp
-        async function enviarCorreo() {
-            const correo = document.getElementById('correo').value.trim();
-            if(!correo) return mostrarMensaje('Ingresa tu correo institucional.', 'error');
+    // 2. PASO B: VERIFICAR EL OTP (Revisar mayúsculas al enviar 🚀)
+    async function enviarOtp() {
+        const otp = document.getElementById('otp').value.trim();
+        if(!otp) return mostrarMensaje('Ingresa el código OTP enviado.', 'error');
 
-            try {
-                const res = await fetch('/api/auth/solicitar-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo })
-                });
-                const data = await res.json();
+        try {
+            const res = await fetch('/api/auth/verificar-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    codigoAlumno: codigoAlumnoDetectado, // 🚀 Envío correcto en CamelCase
+                    otp: otp 
+                })
+            });
+            const data = await res.json();
 
-                if (!res.ok) throw new Error(data.error || 'No se pudo enviar el código.');
+            if (!res.ok) throw new Error(data.error || 'Código incorrecto.');
 
-                codigoAlumnoDetectado = data.codigoAlumno;
-                
-                // Transición visual al paso OTP
-                document.getElementById('groupEmail').classList.add('hidden');
-                document.getElementById('groupOtp').classList.remove('hidden');
-                mostrarMensaje(data.mensaje, 'success');
-            } catch (err) {
-                mostrarMensaje(err.message, 'error');
-            }
+            // Guardar credenciales reales y JWT firmados en la memoria del navegador
+            sessionStorage.setItem('alumnoLogueado', codigoAlumnoDetectado);
+            sessionStorage.setItem('tokenSession', data.token); 
+            sessionStorage.setItem('rolUsuario', data.rol);
+            
+            mostrarMensaje('Acceso correcto. Redireccionando...', 'success');
+            
+            // Redirección forzada al mapa
+            setTimeout(() => {
+                window.location.href = '/index.html';
+            }, 1500);
+
+        } catch (err) {
+            mostrarMensaje(err.message, 'error');
         }
+    }
+</script>
 
-        // Ejecuta el POST a /api/auth/verificar-otp
-        async function enviarOtp() {
-            const otp = document.getElementById('otp').value.trim();
-            if(!otp) return mostrarMensaje('Ingresa el código OTP enviado.', 'error');
-
-            try {
-                const res = await fetch('/api/auth/verificar-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ codigoAlumno: codigoAlumnoDetectado, otp })
-                });
-                const data = await res.json();
-
-                if (!res.ok) throw new Error(data.error || 'Código incorrecto.');
-
-                // Guardar datos en la sesión del navegador para el panel de reservas
-                sessionStorage.setItem('alumnoLogueado', codigoAlumnoDetectado);
-                
-                mostrarMensaje('Acceso correcto. Redireccionando...', 'success');
-                
-                // Redirigir al panel del mapa después de 1.5 segundos
-                setTimeout(() => {
-                    window.location.href = '/index.html';
-                }, 1500);
-
-            } catch (err) {
-                mostrarMensaje(err.message, 'error');
-            }
-        }
-    </script>
 </body>
 </html>

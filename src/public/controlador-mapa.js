@@ -1,4 +1,19 @@
 // src/public/controlador-mapa.js
+const respuesta = await fetch('/api/auth/verificar-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ codigo_alumno: 'U20304050', codigo_otp: '123456' })
+});
+
+const datos = await respuesta.json();
+
+if (respuesta.ok) {
+    // ¡Garantía de Autorización!: Guardamos el JWT en el navegador del alumno
+    localStorage.setItem('token_parking', datos.token);
+    
+    // Ahora cargamos el mapa adjuntando el token en los encabezados
+    renderizarMapaEstacionamientos();
+}
 
 // Variables de estado del alumno autenticado
 let estudianteLogueado = {

@@ -10,6 +10,8 @@
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003366; padding-bottom: 15px; margin-bottom: 20px; }
         h2 { color: #003366; margin: 0; }
         .btn-logout { background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #dc2626; color: white; padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 14px; transition: 0.3s; }
+        .btn-cancel:hover { background: #b91c1c; }
         .alert { padding: 12px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; text-align: center; }
         .error { background: #fde8e8; color: #e53e3e; border: 1px solid #f8b4b4; }
         .success { background: #def7ec; color: #03543f; border: 1px solid #bcf0da; }
@@ -32,10 +34,13 @@
         
         <p>Sesión activa: <span id="displayCodigo" style="font-weight: bold; color: #003366;"></span></p>
         
-        <!-- 📅 Selección obligatoria de fecha de llegada -->
-        <div style="margin-bottom: 20px; background: #e2e8f0; padding: 15px; border-radius: 8px;">
-            <label for="fechaLlegada" style="font-weight: bold; color: #003366;">Selecciona tu Fecha de Llegada a la Sede (24h de anticipación):</label>
-            <input type="date" id="fechaLlegada" style="margin-top: 8px; padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #cbd5e0;">
+        <!-- 📅 Control de Fecha y Cancelación Activa -->
+        <div style="margin-bottom: 20px; background: #e2e8f0; padding: 15px; border-radius: 8px; display: flex; align-items: flex-end; justify-content: space-between;">
+            <div style="flex-grow: 1;">
+                <label for="fechaLlegada" style="font-weight: bold; color: #003366; display: block; margin-bottom: 5px;">Fecha de Llegada (24h de anticipación):</label>
+                <input type="date" id="fechaLlegada" style="width: 100%; padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #cbd5e0; box-sizing: border-box;">
+            </div>
+            <button class="btn-cancel" onclick="cancelarMiReserva()">❌ Cancelar Reserva</button>
         </div>
 
         <div id="panelAlert" class="alert hidden"></div>
@@ -43,7 +48,6 @@
     </div>
 
     <script>
-        // 1. GUARDRAIL DE SEGURIDAD PRINCIPAL
         const codigoAlumno = sessionStorage.getItem('alumnoLogueado');
         if (!codigoAlumno) {
             window.location.href = '/login.html';
@@ -53,20 +57,20 @@
             cargarMapaWeb();
         }
 
-        // 2. FORZAR FECHA DE MAÑANA (Alineado con el control de 24h de anticipación)
         function configurarCalendario24h() {
             const inputFecha = document.getElementById('fechaLlegada');
             const mañana = new Date();
-            mañana.setDate(mañana.getDate() + 1); // Añade exactamente 24 horas al día actual
+            mañana.setDate(mañana.getDate() + 1); 
             
             const formatoFecha = mañana.toISOString().split('T')[0];
             inputFecha.value = formatoFecha;
-            inputFecha.min = formatoFecha; // Bloquea días pasados
-            inputFecha.max = formatoFecha; // Bloquea días posteriores para cumplir el requerimiento estricto de 24h
+            inputFecha.min = formatoFecha; 
+            inputFecha.max = formatoFecha; 
         }
 
         function cerrarSesion() {
             sessionStorage.removeItem('alumnoLogueado');
+            sessionStorage.removeItem('tokenSession');
             window.location.href = '/login.html';
         }
 
@@ -77,11 +81,22 @@
             box.classList.remove('hidden');
         }
 
-        // 3. GET /api/garita/espacios
         async function cargarMapaWeb() {
             const grid = document.getElementById('contenedorMapa');
+            const tokenJWT = sessionStorage.getItem('tokenSession'); 
+
             try {
-                const res = await fetch('/api/garita/espacios');
+                const res = await fetch('/api/garita/espacios', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenJWT}`
+                    }
+                });
+
+                if (res.status === 401 || res.status === 403) throw new Error('Sesión no autorizada por token.');
+                if (!res.ok) throw new Error('No se pudo leer la lista de espacios');
+                
                 const espacios = await res.json();
                 grid.innerHTML = '';
 
@@ -96,34 +111,64 @@
                     grid.appendChild(div);
                 });
             } catch (err) {
-                grid.innerHTML = '<p style="color:red;">Error al conectar con el servidor.</p>';
+                grid.innerHTML = `<p style="color:red; grid-column: span 3; text-align:center;">${err.message}</p>`;
             }
         }
 
-        // 4. POST /api/reservas/crear (ENVIANDO FECHA DE LLEGADA)
         async function solicitarReservaSlot(idEspacio) {
             const fechaElegida = document.getElementById('fechaLlegada').value;
-            if(!fechaElegida) return alert('Por favor, selecciona una fecha válida.');
+            const tokenJWT = sessionStorage.getItem('tokenSession'); 
 
             if(!confirm(`¿Confirmas separar el estacionamiento ${idEspacio} para el día ${fechaElegida}?`)) return;
 
             try {
                 const res = await fetch('/api/reservas/crear', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenJWT}`
+                    },
                     body: JSON.stringify({
                         codigo_alumno: codigoAlumno,
                         id_espacio: idEspacio,
                         otp_verificado: '000000',
-                        fecha_reserva: fechaElegida // Inyección transaccional dinámica
+                        fecha_reserva: fechaElegida
                     })
                 });
                 const data = await res.json();
-
-                if(!res.ok) throw new Error(data.error || 'No se pudo procesar la reserva.');
+                if(!res.ok) throw new Error(data.error || 'Error al procesar reserva.');
 
                 mostrarNotificacion(data.mensaje, 'success');
                 cargarMapaWeb();
+            } catch (err) {
+                mostrarNotificacion(err.message, 'error');
+            }
+        }
+
+        // 🚀 NUEVA FUNCIÓN: Envía la orden de cancelación con el token JWT
+        async function cancelarMiReserva() {
+            const fechaElegida = document.getElementById('fechaLlegada').value;
+            const tokenJWT = sessionStorage.getItem('tokenSession'); 
+
+            if(!confirm(`¿Estás seguro que deseas cancelar tu reserva para el día ${fechaElegida}? El espacio será liberado.`)) return;
+
+            try {
+                const res = await fetch('/api/reservas/cancelar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenJWT}`
+                    },
+                    body: JSON.stringify({
+                        codigo_alumno: codigoAlumno,
+                        fecha_reserva: fechaElegida
+                    })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.error || 'No se pudo cancelar la reserva.');
+
+                mostrarNotificacion(data.mensaje, 'success');
+                cargarMapaWeb(); // Refrescar el mapa para que el slot vuelva a verde instantáneamente
             } catch (err) {
                 mostrarNotificacion(err.message, 'error');
             }

@@ -17,10 +17,14 @@ async function registrarIngresoVehiculo(req, res) {
                 error: `No se localizó una reserva activa PENDIENTE para el alumno ${codigo_alumno} en el slot ${id_espacio} para el día de hoy (${fechaHoy}).` 
             });
         }
-
+        // Ejecutar el bloque transaccional atómico  
         await reservasService.ejecutarIngresoTransaccional(reserva.id_reserva, id_espacio);
+
+        console.log(`[Garita Control] Ingreso autorizado para alumno ${codigo_alumno} en slot ${id_espacio}.`);
         return res.status(200).json({ mensaje: `Ingreso validado con éxito. Slot ${id_espacio} ocupado.` });
+        
     } catch (error) {
+        console.error('[Reservas Controller Error]:', error.message);
         return res.status(500).json({ error: 'Fallo interno al procesar el ingreso vehicular.' });
     }
 }
@@ -91,10 +95,35 @@ async function crearReservaAlumno(req, res) {
     }
 }
 
+/**
+ * Permite al alumno cancelar de forma voluntaria su reserva pactada.
+ * URL: POST /api/reservas/cancelar
+ */
+async function cancelarReservaAlumno(req, res) {
+    const { codigo_alumno, fecha_reserva } = req.body;
+
+    if (!codigo_alumno || !fecha_reserva) {
+        return res.status(400).json({ error: 'Faltan parámetros obligatorios (codigo_alumno, fecha_reserva).' });
+    }
+
+    try {
+        await reservasService.ejecutarCancelacionTransaccional(codigo_alumno, fecha_reserva);
+        
+        return res.status(200).json({ 
+            mensaje: `Reserva para el día ${fecha_reserva} cancelada con éxito. El espacio ha sido liberado para la comunidad.` 
+        });
+    } catch (error) {
+        console.error('[Cancelación Controller Error]:', error.message);
+        return res.status(500).json({ error: error.message || 'Fallo interno al procesar la cancelación.' });
+    }
+}
+
+
 
 module.exports = {
     registrarIngresoVehiculo,
     registrarSalidaVehiculo,
     obtenerEspaciosGarita,
-    crearReservaAlumno
+    crearReservaAlumno,
+    cancelarReservaAlumno
 };

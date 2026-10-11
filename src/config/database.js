@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 // Configuración del Pool utilizando las variables del archivo .env
 const pool = new Pool({
     host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5434,
+    port: process.env.DB_PORT || 5432,
     user: process.env.DB_USER || 'utp_admin',
     password: process.env.DB_PASSWORD || 'SecretPasswordUTP2026',
     database: process.env.DB_DATABASE || 'priority_parking_mvp',

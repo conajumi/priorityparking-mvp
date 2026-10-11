@@ -1,2 +1,8 @@
 node_modules/
 .env
+# Reportes de cobertura de pruebas
+coverage/
+
+# Archivos temporales de SonarQube / SonarLint
+.scannerwork/
+.sonar_lock

@@ -63,6 +63,22 @@
     </div>
 
     <script>
+
+        // 🔍 AÑADE ESTO AL PRINCIPIO DE TU <SCRIPT> EN GARITA.HTML:
+
+        const operador = sessionStorage.getItem('operadorLogueado');
+        const rol = sessionStorage.getItem('rolUsuario');
+
+        // Bloqueo de seguridad perimetral en la vista
+        if (!operador || rol !== 'GARITA') {
+            alert('Acceso restringido. Solo personal de seguridad autorizado.');
+            window.location.href = '/login-garita.html';
+        } else {
+            // Si es correcto, arranca la carga del mapa
+            cargarMapaMonitoreo();
+        }
+
+
         function mostrarAlerta(mensaje, tipo) {
             const el = document.getElementById('globalAlert');
             el.innerText = mensaje;
@@ -71,12 +87,29 @@
             setTimeout(() => el.classList.add('hidden'), 5000);
         }
 
-        // GET /api/garita/espacios
+        // 🚀 NUEVA VERSIÓN CON JWT INYECTADO: Reemplaza las funciones correspondientes en garita.html
+
+        // 1. GET /api/garita/espacios con Token
         async function cargarMapaMonitoreo() {
             const container = document.getElementById('monitorMapa');
             container.innerHTML = '<p style="grid-column: span 3; text-align:center;">Consultando base de datos...</p>';
+            
+            // Extraer el token de sesión guardado
+            const tokenJWT = sessionStorage.getItem('tokenSession'); 
+
             try {
-                const res = await fetch('/api/garita/espacios');
+                const res = await fetch('/api/garita/espacios', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenJWT}` // 🔑 Inyección de credencial
+                    }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error('No autorizado. Inicie sesión desde el portal de garita.');
+                }
+
                 const espacios = await res.json();
                 container.innerHTML = '';
 
@@ -89,7 +122,6 @@
                         <small style="text-transform: uppercase;">${espacio.estado}</small>
                     `;
 
-                    // Si el espacio está ocupado, le da al vigilante el botón rápido de liberación
                     if (espacio.estado === 'OCUPADO') {
                         contenidoHTML += `<button class="btn-liberar" onclick="registrarSalida('${espacio.id_espacio}')">Liberar Slot</button>`;
                     }
@@ -98,14 +130,15 @@
                     container.appendChild(div);
                 });
             } catch (err) {
-                container.innerHTML = '<p style="grid-column: span 3; text-align:center; color:#f56565;">Error de sincronización con el servidor.</p>';
+                container.innerHTML = `<p style="grid-column: span 3; text-align:center; color:#f56565;">${err.message}</p>`;
             }
         }
 
-        // POST /api/garita/registrar-ingreso
+        // 2. POST /api/garita/registrar-ingreso con Token
         async function registrarIngreso() {
             const codigo_alumno = document.getElementById('codigo_alumno').value.trim();
             const id_espacio = document.getElementById('id_espacio').value.trim();
+            const tokenJWT = sessionStorage.getItem('tokenSession'); 
 
             if (!codigo_alumno || !id_espacio) {
                 mostrarAlerta('Por favor, complete ambos campos para validar el ingreso.', 'error');
@@ -115,7 +148,10 @@
             try {
                 const res = await fetch('/api/garita/registrar-ingreso', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenJWT}` // 🔑 Inyección de credencial
+                    },
                     body: JSON.stringify({ codigo_alumno, id_espacio })
                 });
                 const data = await res.json();
@@ -131,14 +167,18 @@
             }
         }
 
-        // POST /api/garita/registrar-salida
+        // 3. POST /api/garita/registrar-salida con Token
         async function registrarSalida(idEspacio) {
             if (!confirm(`¿Confirmas la salida del vehículo del slot ${idEspacio}?`)) return;
+            const tokenJWT = sessionStorage.getItem('tokenSession'); 
 
             try {
                 const res = await fetch('/api/garita/registrar-salida', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenJWT}` // 🔑 Inyección de credencial
+                    },
                     body: JSON.stringify({ id_espacio: idEspacio })
                 });
                 const data = await res.json();

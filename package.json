@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "NODE_ENV=test node src/test/auth.test.js"
+    "test": "cross-env NODE_ENV=test c8 --reporter=lcov node --test test/**/*.test.js",
+    "sonar": "cross-env SONAR_TOKEN=\"squ_b0041301a29886c7c5270dafc33a3837ed1cd8cc\" SONAR_HOST_URL=\"http://localhost:9000\" npx sonar-scanner"
   },
   "keywords": [],
   "author": "",
@@ -14,9 +15,13 @@
   "dependencies": {
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.16",
     "pg": "^8.23.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.14",
+    "sonarqube-scanner": "^5.0.1"
   }
 }

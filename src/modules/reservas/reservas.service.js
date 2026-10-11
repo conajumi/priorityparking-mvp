@@ -142,6 +142,49 @@ async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUs
     }
 }
 
+/**
+ * Cancela una reserva pendiente de forma atómica y libera el slot físico.
+ */
+async function ejecutarCancelacionTransaccional(codigoAlumno, fechaReserva) {
+    const clienteBD = await pool.connect();
+    try {
+        await clienteBD.query('BEGIN');
+
+        // 1. Buscar la reserva pendiente para hoy o mañana de ese alumno y bloquear la fila
+        const buscarQuery = `
+            SELECT id_reserva, id_espacio FROM reservas 
+            WHERE codigo_alumno = $1 AND fecha_reserva = $2 AND estado_reserva = 'PENDIENTE'
+            FOR UPDATE
+        `;
+        const { rows } = await clienteBD.query(buscarQuery, [codigoAlumno, fechaReserva]);
+
+        if (rows.length === 0) {
+            throw new Error('No se encontró ninguna reserva pendiente para cancelar en la fecha seleccionada.');
+        }
+
+        const reserva = rows[0];
+
+        // 2. Actualizar el estado de la transacción lúdica a CANCELADA
+        await clienteBD.query(
+            "UPDATE reservas SET estado_reserva = 'CANCELADA' WHERE id_reserva = \$1",
+            [reserva.id_reserva]
+        );
+
+        // 3. Devolver el espacio de estacionamiento a DISPONIBLE
+        await clienteBD.query(
+            "UPDATE espacios_estacionamiento SET estado = 'DISPONIBLE' WHERE id_espacio = \$1",
+            [reserva.id_espacio]
+        );
+
+        await clienteBD.query('COMMIT');
+        return true;
+    } catch (error) {
+        await clienteBD.query('ROLLBACK');
+        throw error;
+    } finally {
+        clienteBD.release();
+    }
+}
 
 
 // Exportación completa incluyendo el nuevo método
@@ -150,6 +193,7 @@ module.exports = {
     ejecutarIngresoTransaccional,
     ejecutarSalidaTransaccional,
     obtenerTodosLosEspacios, // 👈 Agregado
-    ejecutarReservaTransaccional // 👈 Agregad  o
+    ejecutarReservaTransaccional, // 👈 Agregad  o
+    ejecutarCancelacionTransaccional // 👈 Agregad  o
 };
 
