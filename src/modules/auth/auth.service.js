@@ -93,8 +93,36 @@ async function validarCodigoOtp(codigoAlumno, otpIngresado) {
     return false;
 }
 
+/**
+ * Verifica si un alumno cuenta con una sanción activa por inasistencia (No-Show)
+ */
+async function verificarEstudiantePenalizado(codigoAlumno) {
+    const query = `
+        SELECT id_penalizacion, motivo, fecha_fin 
+        FROM historial_penalizaciones
+        WHERE codigo_alumno = $1 
+          AND activa = TRUE 
+          AND fecha_fin >= NOW()
+        LIMIT 1
+    `;
+    const { rows } = await pool.query(query, [codigoAlumno]);
+    
+    // Si encuentra una fila, significa que el alumno SÍ está penalizado
+    if (rows.length > 0) {
+        return {
+            isPenalized: true,
+            motivo: rows[0].motivo,
+            fechaFin: rows[0].fecha_fin
+        };
+    }
+    
+    return { isPenalized: false };
+}
+
+
 module.exports = {
     buscarEstudiantePorCorreo,
     registrarLogOtp,
-    validarCodigoOtp
+    validarCodigoOtp,
+    verificarEstudiantePenalizado
 };

@@ -6,7 +6,7 @@ const pool = require('../../config/database');
  */
 async function buscarReservaActiva(codigoAlumno, idEspacio, fechaReserva) {
     const query = `
-        SELECT id_reserva FROM reservas 
+        SELECT id_reserva, hora_llegada_programada FROM reservas 
         WHERE codigo_alumno = $1 AND id_espacio = $2 
           AND fecha_reserva = $3 AND estado_reserva = 'PENDIENTE'
     `;
@@ -17,33 +17,40 @@ async function buscarReservaActiva(codigoAlumno, idEspacio, fechaReserva) {
 
 
 /**
- * Registra atómicamente el ingreso vehicular cambiando el estado de la reserva y el slot.
+ * Procesa el ingreso físico del vehículo cambiando el estado de la reserva y del espacio.
+ * Archivo: src/modules/reservas/reservas.service.js
  */
 async function ejecutarIngresoTransaccional(idReserva, idEspacio) {
     const clienteBD = await pool.connect();
     try {
-        await clienteBD.query('BEGIN'); 
+        await clienteBD.query('BEGIN'); // 🔒 Inicio de Bloqueo Atómico
 
-        await clienteBD.query(
-            "UPDATE reservas SET estado_reserva = 'COMPLETADA' WHERE id_reserva = \$1", 
-            [idReserva]
-        );
+        // 1. Cambiar el estado de la reserva pendiente a COMPLETADA
+        // 🚀 CORRECCIÓN DE ORO: Agregamos ::integer para evitar el error de tipo de dato
+        const queryReserva = `
+            UPDATE reservas 
+            SET estado_reserva = 'COMPLETADA' 
+            WHERE id_reserva = $1::integer
+        `;
+        await clienteBD.query(queryReserva, [idReserva]);
 
-        await clienteBD.query(
-            "UPDATE espacios_estacionamiento SET estado = 'OCUPADO' WHERE id_espacio = \$2", 
-            [idEspacio]
-        );
+        // 2. Cambiar el estado físico del slot de estacionamiento a OCUPADO
+        const queryEspacio = `
+            UPDATE espacios_estacionamiento 
+            SET estado = 'OCUPADO' 
+            WHERE id_espacio = $2::varchar
+        `;
+        await clienteBD.query(queryEspacio, [idEspacio]);
 
-        await clienteBD.query('COMMIT'); 
+        await clienteBD.query('COMMIT'); // 💾 Guardar cambios de forma irrevocable
         return true;
     } catch (error) {
-        await clienteBD.query('ROLLBACK'); 
+        await clienteBD.query('ROLLBACK'); // 🔄 Deshacer todo en caso de cualquier fallo
         throw error;
     } finally {
-        clienteBD.release(); 
+        clienteBD.release(); // 🔌 Liberar la conexión al pool
     }
 }
-
 
 /**
  * Libera de forma atómica el espacio físico al retirarse el automóvil de la universidad.
@@ -94,7 +101,7 @@ async function obtenerTodosLosEspacios() {
 /**
  * Crea una reserva de forma atómica verificando la disponibilidad del slot para la fecha de llegada.
  */
-async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva) {
+async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva, horaLlegadaProgramada) {
     const clienteBD = await pool.connect();
     try {
         await clienteBD.query('BEGIN'); // Inicio de Transacción Segura
@@ -119,10 +126,10 @@ async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUs
 
         // 2. Insertar el registro oficial de la reserva (Sin barras invertidas)
         const insertarReservaQuery = `
-            INSERT INTO reservas (codigo_alumno, id_espacio, codigo_otp_usado, fecha_reserva, estado_reserva)
-            VALUES ($1, $2, $3, $4, 'PENDIENTE')
+            INSERT INTO reservas (codigo_alumno, id_espacio, codigo_otp_usado, fecha_reserva, hora_llegada_programada, estado_reserva)
+            VALUES ($1, $2, $3, $4, $5, 'PENDIENTE')
         `;
-        await clienteBD.query(insertarReservaQuery, [codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva]);
+        await clienteBD.query(insertarReservaQuery, [codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva, horaLlegadaProgramada]);
 
         // 3. Cambiar el estado del espacio físico a RESERVADO
         const actualizarEspacioQuery = `

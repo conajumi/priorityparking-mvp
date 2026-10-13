@@ -5,10 +5,17 @@ const authService = require('./auth.service');
 /**
  * PASO 1: Solicitar Código OTP (Con contingencia visual habilitada)
  */
-async function solicitarOtp(req, res) { // 🚀 CORREGIDO: 'solicitarOtp' con O mayúscula
+/**
+ * PASO 1: Solicitar Código OTP (Con control estricto de Penalizaciones y Reglas)
+ */
+/**
+ * PASO 1: Solicitar Código OTP (Módulo de Autenticación Blindado)
+ */
+async function solicitarOtp(req, res) {
     const { correo } = req.body;
 
     try {
+        // 1. Validar el formato del correo institucional de la UTP
         const regexUtp = /^[a-zA-Z0-9._%+-]+@utp\.edu\.pe$/;
         if (!regexUtp.test(correo)) {
             return res.status(400).json({ 
@@ -16,28 +23,30 @@ async function solicitarOtp(req, res) { // 🚀 CORREGIDO: 'solicitarOtp' con O 
             });
         }
 
-        // 1. Buscar filas en PostgreSQL
-        const rows = await authService.buscarEstudiantePorCorreo(correo);
+        // 2. Realizar la consulta a la base de datos
+        const resultadoBD = await authService.buscarEstudiantePorCorreo(correo);
         
-        if (!rows || rows.length === 0) {
+        // 🚀 CONTROL DE EXTRAE-FILAS DEFENSIVO: 
+        // Detecta automáticamente si el servicio devolvió el array completo o la fila [0] ya extraída.
+        const estudiante = Array.isArray(resultadoBD) ? resultadoBD[0] : resultadoBD;
+
+        // 3. Validar si el estudiante existe físicamente en el sistema
+        if (!estudiante) {
             return res.status(404).json({ 
                 error: 'El estudiante no se encuentra registrado en el sistema institucional actual.' 
             });
         }
 
-        //const estudiante = rows[0]; // Extraer el primer alumno de la lista blanca
-         // 1. Buscar filas en PostgreSQL
-        //const rows = await authService.buscarEstudiantePorCorreo(correo);
-        /*
-        if (!rows || rows.length === 0) {
-            return res.status(404).json({ 
-                error: 'El estudiante no se encuentra registrado en el sistema institucional actual.' 
+        // 🔒 GUARDRAIL DE PENALIZACIONES: Verificar si cuenta con bloqueos por inasistencia (No-Show)
+        const penalizacion = await authService.verificarEstudiantePenalizado(estudiante.codigo_alumno);
+        if (penalizacion.isPenalized) {
+            const fechaFormateada = new Date(penalizacion.fechaFin).toLocaleString('es-PE');
+            return res.status(403).json({ 
+                error: `Acceso Denegado PriorityParking: Tu usuario se encuentra penalizado debido a: "${penalizacion.motivo}". Bloqueo vigente hasta el ${fechaFormateada}.` 
             });
         }
-         */
-        // 🚀 CORRECCIÓN DE ORO: Agrega el para extraer al estudiante real del arreglo
-        const estudiante = rows; 
-        // 2. Evaluación detallada de las Reglas Académicas y Financieras
+
+        // 4. Evaluación de las Reglas de Negocio Académicas y Financieras del MVP
         if (!estudiante.es_apto_parking) {
             let motivosRechazo = [];
             
@@ -52,19 +61,18 @@ async function solicitarOtp(req, res) { // 🚀 CORREGIDO: 'solicitarOtp' con O 
             }
 
             const mensajeFinalError = `Acceso Denegado PriorityParking: No cumples con los requisitos del día de hoy debido a: ${motivosRechazo.join(" y ")}`;
-
             return res.status(403).json({ error: mensajeFinalError });
         }
 
-        // 3. Generar número aleatorio seguro de 6 dígitos
+        // 5. Generar número aleatorio seguro de 6 dígitos para el token
         const codigoOtp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // 4. Registrar en la base de datos y despachar correo
+        // 6. Registrar log transaccional en PostgreSQL y despachar código
         await authService.registrarLogOtp(estudiante.codigo_alumno, codigoOtp, correo);
         
         console.log(`\n📬 [Seguridad MVP] Código OTP generado para ${correo}: ${codigoOtp}\n`);
 
-        // 5. ENVIAR RESPUESTA EXITOSA DE INMEDIATO PARA ACTIVAR LA CASILLA OTP EN LA WEB
+        // 7. Responder exitosamente para habilitar la casilla en el Frontend
         return res.status(200).json({ 
             mensaje: 'Código de verificación generado exitosamente. Revisa tu bandeja o la consola de desarrollo.',
             codigoAlumno: estudiante.codigo_alumno
@@ -75,6 +83,8 @@ async function solicitarOtp(req, res) { // 🚀 CORREGIDO: 'solicitarOtp' con O 
         return res.status(500).json({ error: 'Error interno del servidor al procesar la solicitud de acceso.' });
     }
 }
+
+
 
 
 /**

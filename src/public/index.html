@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PriorityParking - Panel de Reservas</title>
+    <title>PriorityParking - Panel Inmediato</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 700px; background: white; margin: 30px auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #003366; padding-bottom: 15px; margin-bottom: 20px; }
         h2 { color: #003366; margin: 0; }
         .btn-logout { background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-cancel { background: #dc2626; color: white; padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 14px; transition: 0.3s; }
-        .btn-cancel:hover { background: #b91c1c; }
         .alert { padding: 12px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; text-align: center; }
         .error { background: #fde8e8; color: #e53e3e; border: 1px solid #f8b4b4; }
         .success { background: #def7ec; color: #03543f; border: 1px solid #bcf0da; }
@@ -28,20 +26,37 @@
 
     <div class="container">
         <div class="header">
-            <h2>🗺️ Reserva tu Espacio - Sede Lima Centro</h2>
+            <h2>🗺️ Reserva tu Espacio en Tiempo Real - Sede Lima Centro</h2>
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
         
         <p>Sesión activa: <span id="displayCodigo" style="font-weight: bold; color: #003366;"></span></p>
         
-        <!-- 📅 Control de Fecha y Cancelación Activa -->
-        <div style="margin-bottom: 20px; background: #e2e8f0; padding: 15px; border-radius: 8px; display: flex; align-items: flex-end; justify-content: space-between;">
-            <div style="flex-grow: 1;">
-                <label for="fechaLlegada" style="font-weight: bold; color: #003366; display: block; margin-bottom: 5px;">Fecha de Llegada (24h de anticipación):</label>
-                <input type="date" id="fechaLlegada" style="width: 100%; padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #cbd5e0; box-sizing: border-box;">
+        <!-- 🔍 REEMPLAZA EL BLOQUE DE CONTROL POR ESTA CONFIGURACIÓN CON EL BOTÓN INTEGRADO -->
+        <div style="margin-bottom: 20px; background: #e2e8f0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 15px;">
+            
+            <!-- 📅 1. FECHA DE RESERVA PRIMERO -->
+            <div>
+                <label for="fechaLlegada" style="font-weight: bold; color: #003366; display: block; margin-bottom: 6px;">📅 Fecha de Reserva:</label>
+                <input type="date" id="fechaLlegada" style="width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #cbd5e0; box-sizing: border-box; background: white;" readonly>
             </div>
-            <button class="btn-cancel" onclick="cancelarMiReserva()">❌ Cancelar Reserva</button>
+            
+            <!-- ⏰ 2. HORA DE LLEGADA SEGUNDO -->
+            <div>
+                <label for="horaLlegada" style="font-weight: bold; color: #003366; display: block; margin-bottom: 6px;">⏰ ¿A qué hora llegas? (20 min de tolerancia):</label>
+                <input type="time" id="horaLlegada" style="width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #cbd5e0; box-sizing: border-box; background: white;">
+            </div>
+
+            <!-- ❌ 3. ACCIÓN DE CANCELACIÓN ACCESIBLE AL FINAL -->
+            <div style="text-align: right; margin-top: 5px;">
+                <button class="btn-cancel" onclick="cancelarMiReserva()" style="width: 100%; padding: 14px; background: #dc2626; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;">
+                    ❌ Cancelar mi Reserva de esta Fecha
+                </button>
+            </div>
+
         </div>
+
+
 
         <div id="panelAlert" class="alert hidden"></div>
         <div class="map-grid" id="contenedorMapa">Cargando espacios...</div>
@@ -53,24 +68,40 @@
             window.location.href = '/login.html';
         } else {
             document.getElementById('displayCodigo').innerText = codigoAlumno;
-            configurarCalendario24h();
+            configurarCamposFechaHora();
             cargarMapaWeb();
         }
 
-        function configurarCalendario24h() {
+        function configurarCamposFechaHora() {
             const inputFecha = document.getElementById('fechaLlegada');
-            const mañana = new Date();
-            mañana.setDate(mañana.getDate() + 1); 
+            const inputHora = document.getElementById('horaLlegada');
             
-            const formatoFecha = mañana.toISOString().split('T')[0];
-            inputFecha.value = formatoFecha;
-            inputFecha.min = formatoFecha; 
-            inputFecha.max = formatoFecha; 
+            // 1. Obtener y setear la fecha local actual de Lima (Formato YYYY-MM-DD)
+            const hoy = new Date();
+            const formatoHoy = hoy.toLocaleDateString('sv-SE'); 
+            
+            // 2. Calcular la fecha máxima permitida (Mañana) para el rango de 2 días de la App UTP
+            const mañana = new Date();
+            mañana.setDate(mañana.getDate() + 1);
+            const formatoMañana = mañana.toLocaleDateString('sv-SE');
+
+            // Asignar restricciones y valor por defecto de fecha
+            inputFecha.value = formatoHoy;
+            inputFecha.min = formatoHoy;
+            inputFecha.max = formatoMañana;
+
+            // 3. Formatear y setear la hora actual local de forma limpia (Formato HH:MM)
+            const horas = String(hoy.getHours()).padStart(2, '0');
+            const minutos = String(hoy.getMinutes()).padStart(2, '0');
+            
+            // Asignar el valor por defecto de hora para eliminar el '--:--'
+            if (inputHora) {
+                inputHora.value = `${horas}:${minutos}`;
+            }
         }
 
         function cerrarSesion() {
             sessionStorage.removeItem('alumnoLogueado');
-            sessionStorage.removeItem('tokenSession');
             window.location.href = '/login.html';
         }
 
@@ -83,20 +114,11 @@
 
         async function cargarMapaWeb() {
             const grid = document.getElementById('contenedorMapa');
-            const tokenJWT = sessionStorage.getItem('tokenSession'); 
-
+            const tokenJWT = sessionStorage.getItem('tokenSession');
             try {
                 const res = await fetch('/api/garita/espacios', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${tokenJWT}`
-                    }
+                    headers: { 'Authorization': `Bearer ${tokenJWT}` }
                 });
-
-                if (res.status === 401 || res.status === 403) throw new Error('Sesión no autorizada por token.');
-                if (!res.ok) throw new Error('No se pudo leer la lista de espacios');
-                
                 const espacios = await res.json();
                 grid.innerHTML = '';
 
@@ -111,20 +133,77 @@
                     grid.appendChild(div);
                 });
             } catch (err) {
-                grid.innerHTML = `<p style="color:red; grid-column: span 3; text-align:center;">${err.message}</p>`;
+                grid.innerHTML = '<p style="color:red;">Error de conexión.</p>';
             }
         }
 
-        async function solicitarReservaSlot(idEspacio) {
+        // 🚀 BUSCA Y REEMPLAZA ÚNICAMENTE ESTA FUNCIÓN EN TU INDEX.HTML:
+        async function cancelarMiReserva() {
             const fechaElegida = document.getElementById('fechaLlegada').value;
             const tokenJWT = sessionStorage.getItem('tokenSession'); 
 
-            if(!confirm(`¿Confirmas separar el estacionamiento ${idEspacio} para el día ${fechaElegida}?`)) return;
+            // Guardrail de seguridad básico
+            if (!fechaElegida) {
+                alert('Por favor, asegúrate de seleccionar una fecha válida primero.');
+                return;
+            }
+
+            // 1. Mensaje de confirmación en el navegador
+            if (!confirm(`¿Estás completamente seguro de que deseas cancelar tu reserva para el día ${fechaElegida}? El espacio será liberado de inmediato.`)) {
+                return; 
+            }
+
+            try {
+                console.log(`[Frontend] Intentando cancelar reserva para: ${codigoAlumno} en fecha ${fechaElegida}`);
+
+                // 2. Petición POST oficial enviando el token en la cabecera
+                const res = await fetch('/api/reservas/cancelar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenJWT}` // 🔑 Token obligatorio para el middleware
+                    },
+                    body: JSON.stringify({
+                        codigo_alumno: codigoAlumno,
+                        fecha_reserva: fechaElegida
+                        // Nota: Asegúrate de que coincida con lo que el body de tu controlador espera
+                    })
+                });
+
+                const data = await res.json();
+
+                // 3. Si el backend responde con un error de base de datos
+                if (!res.ok) {
+                    throw new Error(data.error || 'No se pudo procesar la cancelación en el servidor.');
+                }
+
+                // 4. Si todo sale correcto
+                alert(data.mensaje || 'Reserva cancelada con éxito.');
+                mostrarNotificacion(data.mensaje, 'success');
+                
+                // 5. Refrescar el mapa web de inmediato para pintar los slots de verde
+                await cargarMapaWeb();
+
+            } catch (err) {
+                console.error('[Frontend Cancel Error]:', err.message);
+                alert(`Error al cancelar: ${err.message}`);
+                mostrarNotificacion(err.message, 'error');
+            }
+        }
+
+
+        async function solicitarReservaSlot(idEspacio) {
+            const fechaElegida = document.getElementById('fechaLlegada').value;
+            const horaElegida = document.getElementById('horaLlegada').value;
+            const tokenJWT = sessionStorage.getItem('tokenSession');
+
+            if(!horaElegida) return alert('Por favor, ingresa una hora estimada de llegada.');
+            if(!confirm(`¿Separar el slot ${idEspacio} para hoy a las ${horaElegida}?`)) return;
 
             try {
                 const res = await fetch('/api/reservas/crear', {
                     method: 'POST',
-                    headers: {
+                    headers: { 
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${tokenJWT}`
                     },
@@ -132,43 +211,15 @@
                         codigo_alumno: codigoAlumno,
                         id_espacio: idEspacio,
                         otp_verificado: '000000',
-                        fecha_reserva: fechaElegida
+                        fecha_reserva: fechaElegida,
+                        hora_llegada: horaElegida // 🚀 Enviado dinámicamente al backend
                     })
                 });
                 const data = await res.json();
-                if(!res.ok) throw new Error(data.error || 'Error al procesar reserva.');
+                if(!res.ok) throw new Error(data.error || 'Fallo al procesar tu reserva.');
 
                 mostrarNotificacion(data.mensaje, 'success');
                 cargarMapaWeb();
-            } catch (err) {
-                mostrarNotificacion(err.message, 'error');
-            }
-        }
-
-        // 🚀 NUEVA FUNCIÓN: Envía la orden de cancelación con el token JWT
-        async function cancelarMiReserva() {
-            const fechaElegida = document.getElementById('fechaLlegada').value;
-            const tokenJWT = sessionStorage.getItem('tokenSession'); 
-
-            if(!confirm(`¿Estás seguro que deseas cancelar tu reserva para el día ${fechaElegida}? El espacio será liberado.`)) return;
-
-            try {
-                const res = await fetch('/api/reservas/cancelar', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${tokenJWT}`
-                    },
-                    body: JSON.stringify({
-                        codigo_alumno: codigoAlumno,
-                        fecha_reserva: fechaElegida
-                    })
-                });
-                const data = await res.json();
-                if(!res.ok) throw new Error(data.error || 'No se pudo cancelar la reserva.');
-
-                mostrarNotificacion(data.mensaje, 'success');
-                cargarMapaWeb(); // Refrescar el mapa para que el slot vuelva a verde instantáneamente
             } catch (err) {
                 mostrarNotificacion(err.message, 'error');
             }
