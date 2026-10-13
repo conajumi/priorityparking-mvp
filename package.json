@@ -2,7 +2,8 @@
   "name": "priorityparking-mvp",
   "version": "1.0.0",
   "description": "¡Bienvenido al repositorio oficial de PriorityParking, una solución de código abierto diseñada por y para la comunidad universitaria de la Universidad Tecnológica del Perú (UTP).",
-  "main": "index.js",
+  "main": "src/server.js",
+
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
