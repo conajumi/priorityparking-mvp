@@ -6,7 +6,7 @@
   "main": "src/server.js",
 
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node server.js",
     "dev": "nodemon src/server.js",
     "test": "cross-env NODE_ENV=test c8 --reporter=lcov node --test test/**/*.test.js",
     "sonar": "cross-env SONAR_TOKEN=\"squ_b0041301a29886c7c5270dafc33a3837ed1cd8cc\" SONAR_HOST_URL=\"http://localhost:9000\" npx sonar-scanner"
