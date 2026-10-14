@@ -11,6 +11,12 @@ Ruta Railway: https://priorityparking-mvp-production.up.railway.app/login.html
 Usuario: C29736@utp.edu.pe
 Codigo OTP: aleatorio  (desde el terminal Railway)
 
+Ruta Railway Garita: https://priorityparking-mvp-production.up.railway.app/login-garita.html
+
+Usuario: UTP-GARITA
+Contraseña: GARITA2026
+
+
 ## 🛠️ Stack Tecnológico
 * **Backend:** Node.js v18+ con Express.
 * **Base de Datos:** PostgreSQL 15.
