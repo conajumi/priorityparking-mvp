@@ -4,6 +4,9 @@
 
 Este MVP permite a los estudiantes que cumplen con los criterios de excelencia académica, asistencia y puntualidad financiera, reservar un espacio de estacionamiento en tiempo real para la sede de **Lima Centro**.
 
+Ruta Railway: https://priorityparking-mvp-production.up.railway.app/login.html
+
+
 ## 🛠️ Stack Tecnológico
 * **Backend:** Node.js v18+ con Express.
 * **Base de Datos:** PostgreSQL 15.
