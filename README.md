@@ -6,15 +6,19 @@ Este MVP permite a los estudiantes que cumplen con los criterios de excelencia a
 
 # Pruebas de acceso para el docente:
 
+Acceso como usuario de parking:
+
 Ruta Railway: https://priorityparking-mvp-production.up.railway.app/login.html
 
 Usuario: C29736@utp.edu.pe
-Codigo OTP: aleatorio  (desde el terminal Railway)
+Codigo OTP: 000000  
+
+Acceso como Seguridad:
 
 Ruta Railway Garita: https://priorityparking-mvp-production.up.railway.app/login-garita.html
 
-Usuario: UTP-GARITA
-Contraseña: GARITA2026
+Usuario: UTP-GARITA (EN MAYUSCULAS)
+Contraseña: GARITA2026 (EN MAYUSCULAS)
 
 
 ## 🛠️ Stack Tecnológico
