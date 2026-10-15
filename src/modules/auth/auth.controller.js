@@ -65,7 +65,8 @@ async function solicitarOtp(req, res) {
         }
 
         // 5. Generar número aleatorio seguro de 6 dígitos para el token
-        const codigoOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        //const codigoOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const codigoOtp = "000000"; // Para pruebas de desarrollo, se puede usar un OTP fijo. Cambiar a aleatorio en producción.
         
         // 6. Registrar log transaccional en PostgreSQL y despachar código
         await authService.registrarLogOtp(estudiante.codigo_alumno, codigoOtp, correo);
