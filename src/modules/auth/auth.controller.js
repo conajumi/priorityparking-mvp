@@ -38,7 +38,7 @@ async function solicitarOtp(req, res) {
         }
 
         // 🔒 GUARDRAIL DE PENALIZACIONES: Verificar si cuenta con bloqueos por inasistencia (No-Show)
-        const penalizacion = await authService.verificarEstudiantePenalizado(estudiante.codigo_alumno);
+        const penalizacion = await authService.verificarEstudiantePenalizado(estudiante.codigoAlumno);
         if (penalizacion.isPenalized) {
             const fechaFormateada = new Date(penalizacion.fechaFin).toLocaleString('es-PE');
             return res.status(403).json({ 
@@ -47,17 +47,17 @@ async function solicitarOtp(req, res) {
         }
 
         // 4. Evaluación de las Reglas de Negocio Académicas y Financieras del MVP
-        if (!estudiante.es_apto_parking) {
+        if (!estudiante.esAptoParking) {
             let motivosRechazo = [];
             
-            if (!estudiante.esta_al_dia_pagos) {
+            if (!estudiante.estaAlDiaPagos) {
                 motivosRechazo.push("Presentas deudas pendientes en tus cuotas académicas.");
             }
-            if (parseFloat(estudiante.porcentaje_asistencia) < 70.00) {
-                motivosRechazo.push(`Tu asistencia actual es de ${estudiante.porcentaje_asistencia}%, siendo el mínimo requerido 70%.`);
+            if (parseFloat(estudiante.porcentajeAsistencia) < 70.00) {
+                motivosRechazo.push(`Tu asistencia actual es de ${estudiante.porcentajeAsistencia}%, siendo el mínimo requerido 70%.`);
             }
-            if (parseFloat(estudiante.promedio_ponderado) < 14.00) {
-                motivosRechazo.push(`Tu promedio ponderado es de ${estudiante.promedio_ponderado}, siendo la nota mínima requerida 14.00.`);
+            if (parseFloat(estudiante.promedioPonderado) < 14.00) {
+                motivosRechazo.push(`Tu promedio ponderado es de ${estudiante.promedioPonderado}, siendo la nota mínima requerida 14.00.`);
             }
 
             const mensajeFinalError = `Acceso Denegado PriorityParking: No cumples con los requisitos del día de hoy debido a: ${motivosRechazo.join(" y ")}`;
@@ -69,14 +69,14 @@ async function solicitarOtp(req, res) {
         const codigoOtp = "000000"; // Para pruebas de desarrollo, se puede usar un OTP fijo. Cambiar a aleatorio en producción.
         
         // 6. Registrar log transaccional en PostgreSQL y despachar código
-        await authService.registrarLogOtp(estudiante.codigo_alumno, codigoOtp, correo);
+        await authService.registrarLogOtp(estudiante.codigoAlumno, codigoOtp, correo);
         
         console.log(`\n📬 [Seguridad MVP] Código OTP generado para ${correo}: ${codigoOtp}\n`);
 
         // 7. Responder exitosamente para habilitar la casilla en el Frontend
         return res.status(200).json({ 
             mensaje: 'Código de verificación generado exitosamente. Revisa tu bandeja o la consola de desarrollo.',
-            codigoAlumno: estudiante.codigo_alumno
+            codigoAlumno: estudiante.codigoAlumno
         });
 
     } catch (error) {

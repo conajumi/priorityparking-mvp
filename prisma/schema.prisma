@@ -1,0 +1,105 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. TABLA DE ESTUDIANTES (Alimentada diariamente a las 3:00 AM por el ETL UTP)
+model EstudianteHabilitado {
+  idEstudiante          Int      @id @default(autoincrement()) @map("id_estudiante")
+  codigoAlumno          String   @unique @map("codigo_alumno") @db.VarChar(15)
+  correoInstitucional   String   @unique @map("correo_institucional") @db.VarChar(100)
+  nombreCompleto        String   @map("nombre_completo") @db.VarChar(150)
+  estaAlDiaPagos        Boolean  @default(true) @map("esta_al_dia_pagos")
+  porcentajeAsistencia  Decimal  @map("porcentaje_asistencia") @db.Decimal(5, 2)
+  promedioPonderado     Decimal  @map("promedio_ponderado") @db.Decimal(4, 2)
+  
+  // Campo generado (Ignorado en escrituras por Prisma, gestionado por Postgres de forma STORED)
+  esAptoParking         Boolean  @default(false) @map("es_apto_parking")
+  
+  ultimaActualizacionEtl DateTime @default(now()) @map("ultima_actualizacion_etl") @db.Timestamp
+
+  // Relaciones hacia las demás tablas del sistema
+  reservas               Reserva[]
+  penalizaciones         HistorialPenalizacion[]
+  otps                   RegistroOtp[]
+
+  @@index([correoInstitucional], map: "idx_estudiantes_correo")
+  @@map("estudiantes_habilitados")
+}
+
+// 2. TABLA DE ESPACIOS DE ESTACIONAMIENTO (Específica para Lima Centro)
+model EspacioEstacionamiento {
+  idEspacio     String   @id @map("id_espacio") @db.VarChar(10)
+  piso          Int
+  numeroSlot    Int      @map("numero_slot")
+  estado        String   @default("DISPONIBLE") @db.VarChar(20) // 'DISPONIBLE', 'RESERVADO', 'OCUPADO', 'MANTENIMIENTO'
+  tipoVehiculo  String   @default("AUTO") @map("tipo_vehiculo") @db.VarChar(20) // 'AUTO', 'MOTO'
+  
+  reservas      Reserva[]
+
+  @@map("espacios_estacionamiento")
+}
+
+// 3. TABLA OFICIAL DE RESERVAS
+model Reserva {
+  idReserva              Int                    @id @default(autoincrement()) @map("id_reserva")
+  codigoAlumno           String                 @map("codigo_alumno") @db.VarChar(15)
+  idEspacio              String                 @map("id_espacio") @db.VarChar(10)
+  codigoOtpUsado         String                 @map("codigo_otp_usado") @db.VarChar(6)
+  fechaReserva           DateTime               @map("fecha_reserva") @db.Date
+  horaLlegadaProgramada  DateTime               @default(now()) @map("hora_llegada_programada") @db.Timetz
+  fechaSolicitud         DateTime               @default(now()) @map("fecha_solicitud") @db.Date
+  estadoReserva          String                 @default("PENDIENTE") @map("estado_reserva") @db.VarChar(20) // 'PENDIENTE', 'COMPLETADA', 'EXPIRADA'
+
+  // Relaciones (Usa campos mapeados contra las llaves foráneas lógicas)
+  estudiante             EstudianteHabilitado   @relation(fields: [codigoAlumno], references: [codigoAlumno], onDelete: Restrict)
+  espacio                EspacioEstacionamiento @relation(fields: [idEspacio], references: [idEspacio], onDelete: Restrict)
+
+  // Restricciones Únicas compuestas (Regla de negocio: Una sola reserva por día por alumno)
+  @@unique([codigoAlumno, fechaReserva], name: "unica_reserva_por_dia_alumno")
+  @@map("reservas")
+}
+
+// 4. TABLA DE HISTORIAL DE PENALIZACIONES
+model HistorialPenalizacion {
+  idPenalizacion  Int                  @id @default(autoincrement()) @map("id_penalizacion")
+  codigoAlumno    String               @map("codigo_alumno") @db.VarChar(15)
+  motivo          String               @db.VarChar(255)
+  fechaInicio     DateTime             @default(now()) @map("fecha_inicio") @db.Timestamp
+  fechaFin        DateTime             @map("fecha_fin") @db.Timestamp
+  activa          Boolean              @default(true)
+
+  estudiante      EstudianteHabilitado @relation(fields: [codigoAlumno], references: [codigoAlumno], onDelete: Cascade)
+
+  @@map("historial_penalizaciones")
+}
+
+// 5. TABLA DE AUDITORÍA DE GARITA
+model AuditoriaGarita {
+  idLog             Int      @id @default(autoincrement()) @map("id_log")
+  idReserva         Int?     @map("id_reserva")
+  idEspacio         String?  @map("id_espacio") @db.VarChar(10)
+  operadorUsername  String   @default("VIGILANTE_LIMA_CENTRO") @map("operador_username") @db.VarChar(50)
+  accion            String   @db.VarChar(50) // 'REGISTRO_INGRESO' o 'REGISTRO_SALIDA'
+  fechaAccion       DateTime @default(now()) @map("fecha_accion") @db.Timestamp
+  ipTerminal        String   @default("127.0.0.1") @map("ip_terminal") @db.VarChar(45)
+
+  @@map("auditoria_garita")
+}
+
+// 6. TABLA OFICIAL PARA EL REGISTRO DE TOKENS OTP
+model RegistroOtp {
+  idOtp           Int                  @id @default(autoincrement()) @map("id_otp")
+  codigoAlumno    String               @map("codigo_alumno") @db.VarChar(15)
+  codigoOtp       String               @map("codigo_otp") @db.VarChar(6)
+  fechaGeneracion DateTime             @default(now()) @map("fecha_generacion") @db.Timestamp
+  expirado        Boolean              @default(false)
+
+  estudiante      EstudianteHabilitado @relation(fields: [codigoAlumno], references: [codigoAlumno], onDelete: Cascade)
+
+  @@map("registro_otp")
+}
