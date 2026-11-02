@@ -1,5 +1,6 @@
 // src/modules/reservas/reservas.service.js
 const pool = require('../../config/database');
+const QRCode = require('qrcode');
 
 /**
  * Busca si existe una reserva activa y pendiente para el alumno y slot indicados en una fecha específica.
@@ -128,8 +129,10 @@ async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUs
         const insertarReservaQuery = `
             INSERT INTO reservas (codigo_alumno, id_espacio, codigo_otp_usado, fecha_reserva, hora_llegada_programada, estado_reserva)
             VALUES ($1, $2, $3, $4, $5, 'PENDIENTE')
+            RETURNING *;
         `;
-        await clienteBD.query(insertarReservaQuery, [codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva, horaLlegadaProgramada]);
+        
+        const resultadoReserva = await clienteBD.query(insertarReservaQuery, [codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva, horaLlegadaProgramada]);
 
         // 3. Cambiar el estado del espacio físico a RESERVADO
         const actualizarEspacioQuery = `
@@ -140,7 +143,26 @@ async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUs
         await clienteBD.query(actualizarEspacioQuery, [idEspacio]);
 
         await clienteBD.query('COMMIT'); // Persistencia total
-        return true;
+        //return true;
+
+        // 4. Generar el QR de la reserva (Opcional, se puede hacer en el controlador)
+        // Al final de ejecutarReservaTransaccional en reservas.service.js:
+        const payloadQR = JSON.stringify({
+            codigoAlumno,
+            idEspacio,
+            fechaReserva,
+            horaLlegadaProgramada
+        });
+        // Generar el QR en Base64
+        const qrCodeBase64 = await QRCode.toDataURL(payloadQR, { margin: 2, width: 250 });
+        console.log('Longitud del QR generado:', qrCodeBase64 ? qrCodeBase64.length : 0);
+        //5. Retornar la reserva recién creada y el QR generado
+        return {
+            //reserva: { codigoAlumno, idEspacio, fechaReserva, horaLlegadaProgramada },
+            reserva: resultadoReserva.rows[0], // Retorna la reserva recién creada
+            qrCode: qrCodeBase64
+        };
+ 
     } catch (error) {
         await clienteBD.query('ROLLBACK');
         throw error;
@@ -193,6 +215,70 @@ async function ejecutarCancelacionTransaccional(codigoAlumno, fechaReserva) {
     }
 }
 
+/**
+/ modules/reservas/reservas.service.js
+
+// Tus funciones existentes (ejemplos):
+async function buscarReservaActiva(codigoAlumno, idEspacio, fechaReserva) {
+  const query = `
+    SELECT id_reserva, hora_llegada_programada FROM reservas
+    WHERE codigo_alumno = $1 AND id_espacio = $2
+      AND fecha_reserva = $3 AND estado_reserva = 'PENDIENTE'
+  `;
+  const { rows } = await pool.query(query, [codigoAlumno, idEspacio, fechaReserva]);
+  return rows[0];
+}
+
+
+// Función para crear reserva y generar el QR
+async function crearReserva(datosReserva) {
+  const { 
+    codigo_alumno, 
+    id_espacio, 
+    codigo_otp_usado, 
+    fecha_reserva, 
+    hora_llegada_programada 
+  } = datosReserva;
+
+  const query = `
+    INSERT INTO reservas (
+      codigo_alumno, 
+      id_espacio, 
+      codigo_otp_usado, 
+      fecha_reserva, 
+      hora_llegada_programada, 
+      estado_reserva
+    )
+    VALUES ($1, $2, $3, $4, $5, 'PENDIENTE')
+    RETURNING *;
+  `;
+
+  const valores = [
+    codigo_alumno,
+    id_espacio,
+    codigo_otp_usado,
+    fecha_reserva,
+    hora_llegada_programada || '08:00:00'
+  ];
+
+  const resultado = await pool.query(query, valores);
+  const nuevaReserva = resultado.rows[0];
+
+  const payloadQR = JSON.stringify({
+    id_reserva: nuevaReserva.id_reserva,
+    codigo_alumno: nuevaReserva.codigo_alumno,
+    id_espacio: nuevaReserva.id_espacio,
+    fecha_reserva: nuevaReserva.fecha_reserva
+  });
+
+  const qrCodeBase64 = await QRCode.toDataURL(payloadQR, { margin: 2, width: 250 });
+
+  return {
+    reserva: nuevaReserva,
+    qrCode: qrCodeBase64
+  };
+}
+*/
 
 // Exportación completa incluyendo el nuevo método
 module.exports = {
@@ -201,6 +287,7 @@ module.exports = {
     ejecutarSalidaTransaccional,
     obtenerTodosLosEspacios, // 👈 Agregado
     ejecutarReservaTransaccional, // 👈 Agregad  o
-    ejecutarCancelacionTransaccional // 👈 Agregad  o
+    ejecutarCancelacionTransaccional
+    
 };
 

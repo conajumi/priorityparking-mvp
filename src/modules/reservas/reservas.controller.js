@@ -4,6 +4,7 @@
 const pool = require('../../config/database'); 
 const reservasService = require('./reservas.service');
 
+
 /**
  * Validar Ingreso en Garita controlando los 20 minutos de tolerancia estricta
  * URL: POST /api/garita/registrar-ingreso
@@ -162,10 +163,21 @@ async function crearReservaAlumno(req, res) {
     }
 
     try {
-        await reservasService.ejecutarReservaTransaccional(codigo_alumno, id_espacio, otp_verificado, fecha_reserva, hora_llegada);
-        
+
+        //await reservasService.ejecutarReservaTransaccional(codigo_alumno, id_espacio, otp_verificado, fecha_reserva, hora_llegada);
+        const resultado = await reservasService.ejecutarReservaTransaccional(
+            codigo_alumno,
+            id_espacio,
+            otp_verificado,
+            fecha_reserva,
+            hora_llegada
+        );
+
         return res.status(200).json({ 
-            mensaje: `Reserva confirmada. El slot ${id_espacio} está separado para el día ${fecha_reserva} a las ${hora_llegada}). Tienes 20 min de tolerancia.`
+            success: true,
+            mensaje: `Reserva confirmada. El slot ${id_espacio} está separado para el día ${fecha_reserva} a las ${hora_llegada}). Tienes 20 min de tolerancia.`,
+            reserva: resultado.reserva,
+            qrCode: resultado.qrCode // Llega el data:image/png;base64,...
         });
         
     } catch (error) {
@@ -201,12 +213,36 @@ async function cancelarReservaAlumno(req, res) {
     }
 }
 
+// modules/reservas/reservas.controller.js
 
+/** 
+const crearReserva = async (req, res) => {
+  try {
+    const datosReserva = req.body;
 
+    // Llamada a la función del service (ya sea crearReserva o ejecutarReservaTransaccional)
+    const resultado = await reservasService.crearReserva(datosReserva);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Reserva generada con éxito',
+      reserva: resultado.reserva,
+      qrCode: resultado.qrCode // Llega el data:image/png;base64,...
+    });
+  } catch (error) {
+    console.error('Error al registrar reserva en el controlador:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error interno del servidor al procesar la reserva'
+    });
+  }
+};
+*/
 module.exports = {
     registrarIngresoVehiculo,
     registrarSalidaVehiculo,
     obtenerEspaciosGarita,
     crearReservaAlumno,
     cancelarReservaAlumno
+    //crearReserva
 };

@@ -62,6 +62,34 @@
         <div class="map-grid" id="contenedorMapa">Cargando espacios...</div>
     </div>
 
+<!-- ... todo el contenido existente de tu mapa, tarjetas y formularios ... -->
+
+    <!-- ============================================== -->
+    <!-- MODAL DE CONFIRMACIÓN CON CÓDIGO QR -->
+    <!-- ============================================== -->
+    <div id="modal-confirmacion-qr" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center;">
+      <div style="background: #fff; padding: 25px; border-radius: 10px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <h3 style="color: #2e7d32; margin-top: 0;">¡Reserva Confirmada!</h3>
+        <p>Presenta este código en garita al momento de ingresar:</p>
+        
+        <div style="margin: 15px 0;">
+          <img id="qr-reserva-img" src="" alt="Código QR de Reserva" style="width: 220px; height: 220px; border: 2px dashed #bbb; border-radius: 8px; padding: 5px;" />
+        </div>
+
+        <div style="text-align: left; background: #f8f9fa; padding: 10px 15px; border-radius: 6px; font-size: 14px; margin-bottom: 15px;">
+          <p style="margin: 4px 0;"><strong>Plaza:</strong> <span id="qr-plaza-id"></span></p>
+          <p style="margin: 4px 0;"><strong>Fecha:</strong> <span id="qr-fecha"></span></p>
+          <p style="margin: 4px 0;"><strong>Estado:</strong> <span id="qr-estado" style="color: #0288d1; font-weight: bold;">PENDIENTE</span></p>
+        </div>
+
+        <button id="btn-cerrar-qr" type="button" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+          Aceptar y Continuar
+        </button>
+      </div>
+    </div>
+
+
+
     <script>
         const codigoAlumno = sessionStorage.getItem('alumnoLogueado');
         if (!codigoAlumno) {
@@ -212,11 +240,28 @@
                         id_espacio: idEspacio,
                         otp_verificado: '000000',
                         fecha_reserva: fechaElegida,
-                        hora_llegada: horaElegida // 🚀 Enviado dinámicamente al backend
+                        hora_llegada: horaElegida
                     })
                 });
+
                 const data = await res.json();
                 if(!res.ok) throw new Error(data.error || 'Fallo al procesar tu reserva.');
+
+                // 1. Inyectar imagen QR y datos al modal
+                if (data.qrCode) {
+                    const imgQR = document.getElementById('qr-reserva-img');
+                    if (imgQR) imgQR.src = data.qrCode;
+
+                    const txtPlaza = document.getElementById('qr-plaza-id');
+                    if (txtPlaza) txtPlaza.textContent = idEspacio;
+
+                    const txtFecha = document.getElementById('qr-fecha');
+                    if (txtFecha) txtFecha.textContent = fechaElegida;
+
+                    // 2. Mostrar el modal emergente
+                    const modal = document.getElementById('modal-confirmacion-qr');
+                    if (modal) modal.style.display = 'flex';
+                }
 
                 mostrarNotificacion(data.mensaje, 'success');
                 cargarMapaWeb();
@@ -224,6 +269,19 @@
                 mostrarNotificacion(err.message, 'error');
             }
         }
+
+        // Listener para el botón "Aceptar y Continuar" del modal QR
+        document.getElementById('btn-cerrar-qr')?.addEventListener('click', () => {
+            // 1. Ocultar el modal
+            const modal = document.getElementById('modal-confirmacion-qr');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+
+            // 2. Refrescar el mapa para asegurar que el slot se vea RESERVADO
+            cargarMapaWeb();
+        });
+
     </script>
 </body>
 </html>
