@@ -135,7 +135,7 @@ La presente sección valida la capacidad del sistema PriorityParking MVP para in
 ---
 
 ### 5. Reportes de Resultados (Dashboard Newman)
-*(Insertar aquí la Captura del dashboard interactivo generado en `reporte_integracion.html` mostrando el 100% de éxito)*
+![Reporte de integracion Newman - PriorityParking MVP](./docs/img/reporte_newman.png)
 
 ---
 
