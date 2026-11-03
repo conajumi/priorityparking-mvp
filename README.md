@@ -88,7 +88,7 @@ En conformidad con el estándar internacional ISO/IEC 25010, se evalúa la Adecu
 | **CP04** | Transición de estado vehicular en garita | Petición de salida física sobre slot ocupado | Código 200 OK y liberación de espacio en red | **PASS** |
 
 ### 3. Evidencias de Ejecución y Reporte de Cobertura
-*(Insertar aquí la Captura 1 con los checks verdes de Jest y la Captura 2 de la tabla de métricas de consola)*
+![Reporte Funcional y Pruebas Automaticas (ISO/IEC 25010) - PriorityParking MVP](./docs/img/supertest.png)
 
 ### 4. Métricas, Nivel de Cumplimiento y Observaciones
 * **Total de Casos de Prueba:** 4 ejecutados.
