@@ -169,7 +169,9 @@ La presente sección valida la capacidad del sistema PriorityParking MVP para in
 ---
 
 ### 4. Capturas de Ejecución
-*(Insertar aquí la Captura de la terminal con la ejecución de Newman en verde)*
+![Reporte de integracion Newman x Terminal - PriorityParking MVP](./docs/img/Captura_terminal_ejecucion_Newman.png)
+
+![Reporte de integracion Newman x Terminal - PriorityParking MVP](./docs/img/Captura_terminal_ejecucion_Newman_1.png)
 
 ---
 
