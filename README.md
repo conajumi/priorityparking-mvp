@@ -168,6 +168,11 @@ La presente sección valida la capacidad del sistema PriorityParking MVP para in
 ![Navegador abierto por selenium con el modal del codigo QR - PriorityParking MVP](./docs/img/evidencia_modal_qr.png)
 ## ii. Reportes de Ejecución:
 [INSERTAR AQUÍ CAPTURA 3: Gráfico general del reporte generado por Google Lighthouse mostrando scores superiores al 90% en Accesibilidad y Buenas Prácticas]
+![Reporte Lighthouse - PriorityParking MVP](./docs/img/reporte_lighthouse_1.png)
+
+![Reporte Lighthouse - PriorityParking MVP](./docs/img/reporte_lighthouse_2.png)
+
+![Reporte Lighthouse - PriorityParking MVP](./docs/img/reporte_lighthouse_3.png)
 
 ## 14.c. Métricas, Nivel de Cumplimiento y Observaciones
 * **Métricas Evaluadas:** Tasa de éxito de pruebas de interfaz (Target: 100%), Índice de Accesibilidad Lighthouse (Target: >= 90/100), Tiempo de renderizado de feedback visual (Target: < 1.0s).
