@@ -163,6 +163,7 @@ La presente sección valida la capacidad del sistema PriorityParking MVP para in
 ### 14.b. Evidencia de Ejecución
 ### i. Capturas de Ejecución:
 [INSERTAR AQUÍ CAPTURA 1: Terminal ejecutando `node tests/suite.test.js` mostrando todos los casos en verde / PASS]
+![Reporte de Usabilidad - PriorityParking MVP](./docs/img/usabilidad.png)
 [INSERTAR AQUÍ CAPTURA 2: Navegador abierto por Selenium con el modal del código QR y los mensajes de validación visibles]
 
 ## ii. Reportes de Ejecución:
