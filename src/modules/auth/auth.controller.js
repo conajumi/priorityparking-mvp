@@ -3,12 +3,6 @@ const jwt = require('jsonwebtoken'); // Importar JWT al inicio del archivo
 const authService = require('./auth.service');
 
 /**
- * PASO 1: Solicitar Código OTP (Con contingencia visual habilitada)
- */
-/**
- * PASO 1: Solicitar Código OTP (Con control estricto de Penalizaciones y Reglas)
- */
-/**
  * PASO 1: Solicitar Código OTP (Módulo de Autenticación Blindado)
  */
 async function solicitarOtp(req, res) {

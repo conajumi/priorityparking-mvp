@@ -27,8 +27,10 @@
   "devDependencies": {
     "cross-env": "^10.1.0",
     "jest": "^30.5.2",
+    "newman-reporter-htmlextra": "^1.23.1",
     "nodemon": "^3.1.14",
     "prisma": "^6.0.1",
+    "selenium-webdriver": "^4.51.0",
     "sonarqube-scanner": "^5.0.1",
     "supertest": "^7.3.1"
   }

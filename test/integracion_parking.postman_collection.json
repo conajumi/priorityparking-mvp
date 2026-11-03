@@ -1,0 +1,102 @@
+{
+  "info": {
+    "name": "PriorityParking MVP - Integracion y Sistemas Externos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "CP-INT03: Solicitud de Servicio OTP Institucional",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"correo\": \"U20304050@utp.edu.pe\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/solicitar-otp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "solicitar-otp"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code es 200 OK', function () { pm.response.to.have.status(200); });",
+              "pm.test('Retorna identificador institucional', function () { var jsonData = pm.response.json(); pm.expect(jsonData).to.have.property('codigoAlumno'); });",
+              "pm.test('Latencia de servicio OTP admisible (< 1000ms)', function () { pm.expect(pm.response.responseTime).to.be.below(1000); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-INT02: Persistencia Remota y Consulta a PostgreSQL Cloud",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-bypass-test", "value": "mvp-secret-test" }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/garita/espacios",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "garita", "espacios"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code es 200 OK', function () { pm.response.to.have.status(200); });",
+              "pm.test('Respuesta estructurada desde PostgreSQL', function () { var jsonData = pm.response.json(); pm.expect(jsonData).to.be.an('array'); });",
+              "pm.test('Latencia de sincronizacion remota menor a 600ms', function () { pm.expect(pm.response.responseTime).to.be.below(600); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-INT01: Consumo y Entrega del Servicio de Ticket QR",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-bypass-test", "value": "mvp-secret-test" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigo_alumno\": \"U20304050\",\n  \"id_espacio\": \"LC-P1-09\",\n  \"otp_verificado\": \"123456\",\n  \"fecha_reserva\": \"2026-12-15\",\n  \"hora_llegada\": \"09:00:00\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/reservas/crear",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "reservas", "crear"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code es 200 OK', function () { pm.response.to.have.status(200); });",
+              "pm.test('Interoperabilidad QR: Entrega formato Base64', function () { var jsonData = pm.response.json(); pm.expect(jsonData.qrCode).to.include('data:image/png;base64'); });",
+              "pm.test('Latencia de procesamiento menor a 500ms', function () { pm.expect(pm.response.responseTime).to.be.below(500); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
