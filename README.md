@@ -70,6 +70,45 @@ Todos los días a las **3:00 AM**, un proceso de extracción sincroniza de forma
 ---
 📄 Licencia MIT - Proyecto desarrollado de manera libre para la comunidad de la UTP.
 
+## 11. Validación en Cloud - Versión 2
+
+La presente sección documenta el despliegue de la versión 2 (MVP) de **PriorityParking** en infraestructura de nube administrada (PaaS), garantizando la disponibilidad del servicio, la conexión segura con la base de datos PostgreSQL remota y la persistencia transaccional del flujo de reservas y control de garita en un entorno productivo con certificado SSL activo.
+
+---
+
+### 1. Manual de Despliegue v2
+
+El despliegue productivo opera bajo una arquitectura de entrega continua (CI/CD) vinculada a la rama principal (`main`) del repositorio oficial en GitHub (`conajumi/priorityparking-mvp`), alojado sobre la plataforma cloud **Railway**.
+
+#### A. Arquitectura y Entorno de Ejecución
+* **Plataforma PaaS:** Railway Cloud Platform.
+* **Runtime:** Node.js v22.x LTS.
+* **Servidor HTTP:** Express.js sobre puerto dinámico asignado por el host (`process.env.PORT`).
+* **Base de Datos Remota:** Instancia PostgreSQL gestionada en la nube con soporte de cifrado SSL/TLS.
+
+---
+
+#### B. Variables de Entorno de Producción
+Para desacoplar las credenciales del código fuente y proteger los secretos del sistema, el entorno de nube utiliza las siguientes variables configuradas en el panel de Railway:
+
+| Variable de Entorno | Tipo / Formato | Propósito Operacional |
+|---|---|---|
+| `NODE_ENV` | `production` | Activa optimizaciones de Express y deshabilita logs verbosos de depuración. |
+| `PORT` | `3000` (o `$PORT`) | Puerto TCP asignado dinámicamente por la plataforma en la nube. |
+| `DATABASE_URL` | `postgresql://<user>:<pwd>@<host>:<port>/<db>?sslmode=require` | Cadena de conexión transaccional con pooling hacia PostgreSQL Cloud. |
+| `JWT_SECRET` | Cadena alfanumérica (256-bit) | Semilla criptográfica para firma y validación de tokens de sesión JWT. |
+| `OTP_DEFAULT_CODE` | `000000` | Bypass de validación para evaluación controlada de flujo institucional. |
+| `QR_ERROR_CORRECTION` | `M` | Nivel de corrección de redundancia de errores para el renderizado matricial de tickets. |
+
+---
+
+#### C. Pipeline de Compilación e Inicio (Build & Start)
+El ciclo automatizado de construcción e inicio del contenedor en la nube ejecuta los siguientes pasos:
+
+1. **Instalación de Dependencias de Producción (Build Command):**
+   ```bash
+   npm install --omit=dev
+
 ## 12. Calidad Funcional y Pruebas Automatizadas (ISO/IEC 25010)
 
 En conformidad con el estándar internacional ISO/IEC 25010, se evalúa la Adecuación Funcional a través de tres subcaracterísticas: Completitud Funcional (el sistema cubre todas las tareas especificadas), Corrección Funcional (proporciona resultados correctos con la precisión requerida) e Idoneidad Funcional (facilita el cumplimiento de las metas operativas del estacionamiento).
