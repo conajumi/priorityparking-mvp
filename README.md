@@ -70,6 +70,34 @@ Todos los días a las **3:00 AM**, un proceso de extracción sincroniza de forma
 ---
 📄 Licencia MIT - Proyecto desarrollado de manera libre para la comunidad de la UTP.
 
+## 12. Calidad Funcional y Pruebas Automatizadas (ISO/IEC 25010)
+
+En conformidad con el estándar internacional ISO/IEC 25010, se evalúa la Adecuación Funcional a través de tres subcaracterísticas: Completitud Funcional (el sistema cubre todas las tareas especificadas), Corrección Funcional (proporciona resultados correctos con la precisión requerida) e Idoneidad Funcional (facilita el cumplimiento de las metas operativas del estacionamiento).
+
+### 1. Frameworks Utilizados y Justificación Técnica
+* **Jest (v29.x):** Framework de pruebas unitarias y de integración para Node.js. Seleccionado por su alta velocidad de ejecución, motor de aserciones integrado, soporte nativo de mocks y generación directa de métricas de cobertura (Istanbul) sin herramientas adicionales.
+* **Supertest (v7.x):** Librería especializada para testeo de peticiones HTTP en Express sin necesidad de levantar el servidor de red en puertos físicos, facilitando pruebas deterministas sobre controladores y middlewares.
+* **Selenium WebDriver:** Empleado en el análisis de flujo End-to-End (E2E) para automatizar la interacción en navegador web sobre la generación del código QR en el DOM.
+
+### 2. Matriz de Casos de Prueba (CP)
+| ID | Descripción del Caso | Entrada / Condición | Resultado Esperado | Estado |
+|---|---|---|---|---|
+| **CP01** | Registro exitoso de reserva de estacionamiento y código QR | Payload válido con credenciales y slot libre | Código 200 OK, reserva PENDIENTE y `qrCode` en formato Base64 | **PASS** |
+| **CP02** | Bloqueo de reserva por falta de datos obligatorios | Payload incompleto (ausencia de slot o fecha) | Código 400 Bad Request y mensaje descriptivo | **PASS** |
+| **CP03** | Cancelación voluntaria y liberación de cupo | Código de alumno y fecha de reserva activa | Código 200 OK y espacio marcado nuevamente como DISPONIBLE | **PASS** |
+| **CP04** | Transición de estado vehicular en garita | Petición de salida física sobre slot ocupado | Código 200 OK y liberación de espacio en red | **PASS** |
+
+### 3. Evidencias de Ejecución y Reporte de Cobertura
+*(Insertar aquí la Captura 1 con los checks verdes de Jest y la Captura 2 de la tabla de métricas de consola)*
+
+### 4. Métricas, Nivel de Cumplimiento y Observaciones
+* **Total de Casos de Prueba:** 4 ejecutados.
+* **Tasa de Éxito:** 100% passed (0 fallos, 0 errores sintácticos).
+* **Nivel de Cumplimiento:** Total según los criterios de completitud e integridad transaccional ACID de la base de datos PostgreSQL.
+* **Incidencias Resueltas:** Se subsanó la sincronización del payload entre el controlador y el frontend, unificando la entrega del string Base64 del código QR dentro de la respuesta transaccional del servicio.
+
+
+
 14. PRUEBAS AUTOMATIZADAS DE USABILIDAD
 
 14.a. Evidencia de Implementación de Pruebas de Usabilidad
