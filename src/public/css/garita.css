@@ -1,0 +1,173 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a202c;
+    margin: 0;
+    padding: 20px;
+    color: #e2e8f0;
+}
+
+.container {
+    max-width: 800px;
+    background: #2d3748;
+    margin: 20px auto;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+h2 {
+    color: #63b3ed;
+    text-align: center;
+    border-bottom: 2px solid #4a5568;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+h3 {
+    color: #90cdf4;
+    border-bottom: 1px solid #4a5568;
+    padding-bottom: 5px;
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #cbd5e0;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    background: #4a5568;
+    border: 1px solid #718096;
+    border-radius: 6px;
+    color: white;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+input::placeholder {
+    color: #a0aec0;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #2b6cb0;
+}
+
+.btn-secondary {
+    background: #4a5568;
+}
+
+.btn-secondary:hover {
+    background: #2d3748;
+}
+
+.btn-liberar {
+    background: #e53e3e;
+    margin-top: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+.btn-liberar:hover {
+    background: #c53030;
+}
+
+.alert {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.error {
+    background: #fed7d7;
+    color: #9b2c2c;
+}
+
+.success {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.slot {
+    border: 2px solid #4a5568;
+    padding: 15px;
+    text-align: center;
+    border-radius: 8px;
+    font-weight: bold;
+    background: #2d3748;
+}
+
+.slot-slot-id {
+    font-size: 16px;
+}
+
+.slot-status {
+    text-transform: uppercase;
+    font-size: 12px;
+    display: block;
+}
+
+.DISPONIBLE {
+    border-color: #38a169;
+    color: #48bb78;
+}
+
+.RESERVADO {
+    border-color: #dd6b20;
+    color: #ed8936;
+}
+
+.OCUPADO {
+    border-color: #e53e3e;
+    color: #f56565;
+}
+
+.hidden {
+    display: none;
+}
+
+.status-loading {
+    grid-column: span 3;
+    text-align: center;
+}
+
+.status-error {
+    grid-column: span 3;
+    text-align: center;
+    color: #f56565;
+}
