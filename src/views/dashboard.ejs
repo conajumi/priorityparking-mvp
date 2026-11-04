@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard del Estudiante - ParkingU</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <header class="top-nav">
+        <div class="logo">ParkingU</div>
+        <div class="user-profile">
+            <span class="avatar">JP</span>
+            <span class="user-name" id="userNameLabel">Juan Pérez</span>
+            <button id="btnCerrarSesion" class="btn-logout">Salir</button>
+        </div>
+    </header>
+
+    <div class="layout-container">
+        <!-- Barra Lateral (Sidebar) -->
+        <aside class="sidebar">
+            <nav>
+                <a href="/dashboard" class="nav-item active">Dashboard</a>
+                <a href="/reserva" class="nav-item">Nueva reserva</a>
+                <a href="/mis-reservas" class="nav-item">Mis reservas</a>
+                <a href="/prioridad" class="nav-item">Mi prioridad</a>
+                <a href="/historial" class="nav-item">Historial</a>
+            </nav>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <h1 class="welcome-title">Hola, <span id="nombreCorto">Estudiante</span></h1>
+
+            <!-- Métricas / Indicadores del Mockup -->
+            <section class="cards-grid">
+                <div class="card">
+                    <span class="card-label">Nivel de prioridad</span>
+                    <div class="card-badge badge-green">Alta</div>
+                </div>
+
+                <div class="card">
+                    <span class="card-label">Próxima reserva</span>
+                    <div class="card-value" id="lblProximaReserva">Sin reservas activas</div>
+                    <span class="card-status status-blue" id="lblEstadoReserva">Al día</span>
+                </div>
+
+                <div class="card">
+                    <span class="card-label">Espacios disponibles</span>
+                    <div class="card-metric" id="metricEspacios">--</div>
+                </div>
+            </section>
+
+            <!-- Acciones Principales -->
+            <div class="actions-row">
+                <a href="/reserva" class="btn-primary">Nueva reserva</a>
+                <button class="btn-secondary" id="btnHistorial">Ver historial</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

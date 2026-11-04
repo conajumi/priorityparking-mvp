@@ -15,19 +15,15 @@ async function buscarReservaActiva(codigoAlumno, idEspacio, fechaReserva) {
     return rows[0]; 
 }
 
-
-
 /**
  * Procesa el ingreso físico del vehículo cambiando el estado de la reserva y del espacio.
- * Archivo: src/modules/reservas/reservas.service.js
  */
 async function ejecutarIngresoTransaccional(idReserva, idEspacio) {
     const clienteBD = await pool.connect();
     try {
-        await clienteBD.query('BEGIN'); // 🔒 Inicio de Bloqueo Atómico
+        await clienteBD.query('BEGIN');
 
         // 1. Cambiar el estado de la reserva pendiente a COMPLETADA
-        // 🚀 CORRECCIÓN DE ORO: Agregamos ::integer para evitar el error de tipo de dato
         const queryReserva = `
             UPDATE reservas 
             SET estado_reserva = 'COMPLETADA' 
@@ -43,13 +39,13 @@ async function ejecutarIngresoTransaccional(idReserva, idEspacio) {
         `;
         await clienteBD.query(queryEspacio, [idEspacio]);
 
-        await clienteBD.query('COMMIT'); // 💾 Guardar cambios de forma irrevocable
+        await clienteBD.query('COMMIT');
         return true;
     } catch (error) {
-        await clienteBD.query('ROLLBACK'); // 🔄 Deshacer todo en caso de cualquier fallo
+        await clienteBD.query('ROLLBACK');
         throw error;
     } finally {
-        clienteBD.release(); // 🔌 Liberar la conexión al pool
+        clienteBD.release();
     }
 }
 
@@ -68,7 +64,7 @@ async function ejecutarSalidaTransaccional(idEspacio) {
             WHERE id_espacio = $1 AND fecha_reserva = CURRENT_DATE AND estado_reserva = 'COMPLETADA'
         `, [idEspacio]);
 
-        // 2. Devolver el espacio físico a estado DISPONIBLE (Vuelve a verde en el mapa web)
+        // 2. Devolver el espacio físico a estado DISPONIBLE
         await clienteBD.query(
             "UPDATE espacios_estacionamiento SET estado = 'DISPONIBLE' WHERE id_espacio = $1", 
             [idEspacio]
@@ -83,6 +79,7 @@ async function ejecutarSalidaTransaccional(idEspacio) {
         clienteBD.release();
     }
 }
+
 /**
  * Consulta el estado actual de todos los espacios de estacionamiento en la base de datos.
  */
@@ -93,19 +90,16 @@ async function obtenerTodosLosEspacios() {
         ORDER BY id_espacio ASC
     `;
     const { rows } = await pool.query(query);
-    return rows; // Retorna la lista de slots con sus estados en tiempo real
+    return rows;
 }
 
-/**
- * Crea una reserva de forma atómica verificando la disponibilidad del slot para la fecha de llegada.
- */
 /**
  * Crea una reserva de forma atómica verificando la disponibilidad del slot para la fecha de llegada.
  */
 async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva, horaLlegadaProgramada) {
     const clienteBD = await pool.connect();
     try {
-        await clienteBD.query('BEGIN'); // Inicio de Transacción Segura
+        await clienteBD.query('BEGIN');
 
         // 1. Bloquear y verificar el estado actual del espacio
         const verificarQuery = `
@@ -114,25 +108,29 @@ async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUs
         `;
         const { rows } = await clienteBD.query(verificarQuery, [idEspacio]);
         
-        // 🚀 EVALUACIÓN CORRECTA: Verificar si el array tiene elementos antes de indexar
         if (!rows || rows.length === 0) {
             throw new Error('El espacio seleccionado no existe.');
         }
         
-        // 🚀 EXTRAER EL OBJETO FÍSICO REAL (Índice 0)
         const espacioFisico = rows[0];
         if (espacioFisico.estado !== 'DISPONIBLE') {
             throw new Error('El espacio ya no se encuentra disponible.');
         }
 
-        // 2. Insertar el registro oficial de la reserva (Sin barras invertidas)
+        // 2. Insertar el registro oficial de la reserva
         const insertarReservaQuery = `
             INSERT INTO reservas (codigo_alumno, id_espacio, codigo_otp_usado, fecha_reserva, hora_llegada_programada, estado_reserva)
             VALUES ($1, $2, $3, $4, $5, 'PENDIENTE')
             RETURNING *;
         `;
         
-        const resultadoReserva = await clienteBD.query(insertarReservaQuery, [codigoAlumno, idEspacio, codigoOtpUsado, fechaReserva, horaLlegadaProgramada]);
+        const resultadoReserva = await clienteBD.query(insertarReservaQuery, [
+            codigoAlumno, 
+            idEspacio, 
+            codigoOtpUsado, 
+            fechaReserva, 
+            horaLlegadaProgramada
+        ]);
 
         // 3. Cambiar el estado del espacio físico a RESERVADO
         const actualizarEspacioQuery = `
@@ -142,24 +140,19 @@ async function ejecutarReservaTransaccional(codigoAlumno, idEspacio, codigoOtpUs
         `;
         await clienteBD.query(actualizarEspacioQuery, [idEspacio]);
 
-        await clienteBD.query('COMMIT'); // Persistencia total
-        //return true;
+        await clienteBD.query('COMMIT');
 
-        // 4. Generar el QR de la reserva (Opcional, se puede hacer en el controlador)
-        // Al final de ejecutarReservaTransaccional en reservas.service.js:
+        // 4. Generar el QR de la reserva en Base64
         const payloadQR = JSON.stringify({
             codigoAlumno,
             idEspacio,
             fechaReserva,
             horaLlegadaProgramada
         });
-        // Generar el QR en Base64
         const qrCodeBase64 = await QRCode.toDataURL(payloadQR, { margin: 2, width: 250 });
-        console.log('Longitud del QR generado:', qrCodeBase64 ? qrCodeBase64.length : 0);
-        //5. Retornar la reserva recién creada y el QR generado
+
         return {
-            //reserva: { codigoAlumno, idEspacio, fechaReserva, horaLlegadaProgramada },
-            reserva: resultadoReserva.rows[0], // Retorna la reserva recién creada
+            reserva: resultadoReserva.rows[0],
             qrCode: qrCodeBase64
         };
  
@@ -179,7 +172,6 @@ async function ejecutarCancelacionTransaccional(codigoAlumno, fechaReserva) {
     try {
         await clienteBD.query('BEGIN');
 
-        // 1. Buscar la reserva pendiente para hoy o mañana de ese alumno y bloquear la fila
         const buscarQuery = `
             SELECT id_reserva, id_espacio FROM reservas 
             WHERE codigo_alumno = $1 AND fecha_reserva = $2 AND estado_reserva = 'PENDIENTE'
@@ -193,15 +185,13 @@ async function ejecutarCancelacionTransaccional(codigoAlumno, fechaReserva) {
 
         const reserva = rows[0];
 
-        // 2. Actualizar el estado de la transacción lúdica a CANCELADA
         await clienteBD.query(
-            "UPDATE reservas SET estado_reserva = 'CANCELADA' WHERE id_reserva = \$1",
+            "UPDATE reservas SET estado_reserva = 'CANCELADA' WHERE id_reserva = $1",
             [reserva.id_reserva]
         );
 
-        // 3. Devolver el espacio de estacionamiento a DISPONIBLE
         await clienteBD.query(
-            "UPDATE espacios_estacionamiento SET estado = 'DISPONIBLE' WHERE id_espacio = \$1",
+            "UPDATE espacios_estacionamiento SET estado = 'DISPONIBLE' WHERE id_espacio = $1",
             [reserva.id_espacio]
         );
 
@@ -216,78 +206,36 @@ async function ejecutarCancelacionTransaccional(codigoAlumno, fechaReserva) {
 }
 
 /**
-/ modules/reservas/reservas.service.js
-
-// Tus funciones existentes (ejemplos):
-async function buscarReservaActiva(codigoAlumno, idEspacio, fechaReserva) {
-  const query = `
-    SELECT id_reserva, hora_llegada_programada FROM reservas
-    WHERE codigo_alumno = $1 AND id_espacio = $2
-      AND fecha_reserva = $3 AND estado_reserva = 'PENDIENTE'
-  `;
-  const { rows } = await pool.query(query, [codigoAlumno, idEspacio, fechaReserva]);
-  return rows[0];
+ * Consulta el listado de reservas históricas y futuras de un alumno específico (Mockup E06).
+ */
+async function obtenerReservasPorAlumno(codigoAlumno) {
+    const query = `
+        SELECT 
+            r.id_reserva,
+            r.codigo_alumno,
+            r.id_espacio,
+            r.codigo_otp_usado,
+            r.fecha_reserva,
+            r.hora_llegada_programada,
+            r.estado_reserva,
+            e.piso,
+            e.numero_slot,
+            e.tipo_vehiculo
+        FROM reservas r
+        LEFT JOIN espacios_estacionamiento e ON r.id_espacio = e.id_espacio
+        WHERE r.codigo_alumno = $1
+        ORDER BY r.fecha_reserva DESC, r.hora_llegada_programada DESC
+    `;
+    const { rows } = await pool.query(query, [codigoAlumno]);
+    return rows;
 }
 
-
-// Función para crear reserva y generar el QR
-async function crearReserva(datosReserva) {
-  const { 
-    codigo_alumno, 
-    id_espacio, 
-    codigo_otp_usado, 
-    fecha_reserva, 
-    hora_llegada_programada 
-  } = datosReserva;
-
-  const query = `
-    INSERT INTO reservas (
-      codigo_alumno, 
-      id_espacio, 
-      codigo_otp_usado, 
-      fecha_reserva, 
-      hora_llegada_programada, 
-      estado_reserva
-    )
-    VALUES ($1, $2, $3, $4, $5, 'PENDIENTE')
-    RETURNING *;
-  `;
-
-  const valores = [
-    codigo_alumno,
-    id_espacio,
-    codigo_otp_usado,
-    fecha_reserva,
-    hora_llegada_programada || '08:00:00'
-  ];
-
-  const resultado = await pool.query(query, valores);
-  const nuevaReserva = resultado.rows[0];
-
-  const payloadQR = JSON.stringify({
-    id_reserva: nuevaReserva.id_reserva,
-    codigo_alumno: nuevaReserva.codigo_alumno,
-    id_espacio: nuevaReserva.id_espacio,
-    fecha_reserva: nuevaReserva.fecha_reserva
-  });
-
-  const qrCodeBase64 = await QRCode.toDataURL(payloadQR, { margin: 2, width: 250 });
-
-  return {
-    reserva: nuevaReserva,
-    qrCode: qrCodeBase64
-  };
-}
-*/
-
-// Exportación completa incluyendo el nuevo método
 module.exports = {
     buscarReservaActiva,
     ejecutarIngresoTransaccional,
     ejecutarSalidaTransaccional,
-    obtenerTodosLosEspacios, // 👈 Agregado
-    ejecutarReservaTransaccional, // 👈 Agregad  o
-    ejecutarCancelacionTransaccional
-    
+    obtenerTodosLosEspacios,
+    ejecutarReservaTransaccional,
+    ejecutarCancelacionTransaccional,
+    obtenerReservasPorAlumno
 };
-

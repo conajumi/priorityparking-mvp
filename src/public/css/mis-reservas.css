@@ -1,0 +1,138 @@
+/* Barra de retroceso */
+.top-action-bar {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.btn-retroceder {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-retroceder:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+/* Tarjeta contenedora de Mis Reservas */
+.reservas-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Pestañas */
+.tabs-header {
+    display: flex;
+    gap: 1.5rem;
+    border-bottom: 2px solid #f1f5f9;
+    margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748b;
+    padding-bottom: 0.75rem;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.tab-btn.active {
+    color: #2563eb;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2.5px;
+    background-color: #2563eb;
+    border-radius: 2px;
+}
+
+/* Lista de Reservas */
+.reserva-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    background: #ffffff;
+}
+
+.badge-estado {
+    display: inline-block;
+    margin-top: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-confirmada { 
+    background: #dcfce7; 
+    color: #16a34a; 
+}
+
+.badge-pendiente { 
+    background: #fef3c7; 
+    color: #d97706; 
+}
+
+.badge-expirada { 
+    background: #f1f5f9; 
+    color: #64748b; 
+}
+
+/* Botones de acción */
+.btn-qr {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-qr:hover {
+    background-color: #f8fafc;
+}
+
+.btn-cancel {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    color: #dc2626;
+    cursor: pointer;
+    font-weight: 500;
+    margin-left: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #fef2f2;
+}

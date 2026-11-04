@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= typeof titulo !== 'undefined' ? titulo : 'PriorityParking - Panel Alumno' %></title>
-    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/reserva.css">
 </head>
 <body>
-
+<div style="margin-bottom: 1rem;">
+    <a href="/dashboard" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; text-decoration: none; color: #1e293b; font-weight: 600; font-size: 0.85rem;">
+        &larr; Volver al Dashboard
+    </a>
+</div>
     <div class="container">
         <div class="header">
             <h2>🗺️ Reserva tu Espacio en Tiempo Real - Sede Lima Centro</h2>
@@ -60,6 +64,6 @@
       </div>
     </div>
 
-    <script src="/js/index.js"></script>
+    <script src="/js/reserva.js"></script>
 </body>
 </html>

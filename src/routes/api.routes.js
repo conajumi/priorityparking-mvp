@@ -1,50 +1,23 @@
+// src/routes/api.routes.js
 const express = require('express');
 const router = express.Router();
-const { verificarRol } = require('../middlewares/auth.middleware'); // Importar el middleware
+const { verificarRol } = require('../middlewares/auth.middleware');
 
-// Importar los controladores desarrollados
+// Importar controladores
 const authController = require('../modules/auth/auth.controller');
 const espaciosController = require('../modules/estacionales/espacios.controller');
 const reservasController = require('../modules/reservas/reservas.controller');
 
 /**
  * ==========================================
- * RUTAS DEL MÓDULO 1: AUTENTICACIÓN
+ * RUTAS PÚBLICAS: AUTENTICACIÓN
  * ==========================================
  */
-// Alumno solicita el código OTP ingresando su correo institucional
+// Alumno solicita el código OTP con su correo institucional
 router.post('/auth/solicitar-otp', authController.solicitarOtp);
 
-// Verificacion de codigo OTP, cuando se inicia sesion con su correo le llega un codigo de 6 digitos
+// Validación del código OTP de 6 dígitos
 router.post('/auth/verificar-otp', authController.verificarOtp);
-
-/**
- * ==========================================
- * RUTAS DEL MÓDULO 2 Y 3: OPERACIONES DE GARITA Y MAPA
- * ==========================================
- 
-// Rutas Protegidas para el Mapa (Accesibles por Estudiantes, Vigilantes y Administradores)
-router.get('/garita/espacios', verificarRol(['ESTUDIANTE', 'GARITA', 'ADMIN']), espaciosController.listarEspacios);
-
-// Rutas de Control de Garita (Exclusivas para el Vigilante o Administrador)
-router.post('/garita/registrar-ingreso', verificarRol(['GARITA', 'ADMIN']), reservasController.registrarIngresoVehiculo);
-router.post('/garita/registrar-salida', verificarRol(['GARITA', 'ADMIN']), reservasController.registrarSalidaVehiculo);
-
-// Rutas Administrativas (Exclusivas para el Administrador de la Sede)
-router.patch('/garita/espacios/estado', verificarRol(['ADMIN']), espaciosController.actualizarEstadoEspacio);
-
-// Obtener el mapa de espacios en tiempo real (Usado por Alumnos y el Monitor de Garita)
-router.get('/garita/espacios', reservasController.obtenerEspaciosGarita);
-
-// Registrar el ingreso físico del vehículo (Vigilante presiona "Ingresar" en su panel)
-router.post('/garita/registrar-ingreso', reservasController.registrarIngresoVehiculo);
-
-// Registrar la salida y liberar el espacio (Vigilante presiona "Liberar" al salir el auto)
-router.post('/garita/registrar-salida', reservasController.registrarSalidaVehiculo);
-
-// Crear una nueva reserva desde el panel del alumno
-router.post('/reservas/crear', reservasController.crearReservaAlumno);
-*/
 
 /**
  * =================================================================
@@ -52,20 +25,22 @@ router.post('/reservas/crear', reservasController.crearReservaAlumno);
  * =================================================================
  */
 
-// 1. Obtener el mapa de espacios en tiempo real (Accesible por Estudiantes, Vigilantes y Administradores)
+// 1. Obtener el mapa de espacios en tiempo real (Estudiantes, Garita y Admin)
 router.get('/garita/espacios', verificarRol(['ESTUDIANTE', 'GARITA', 'ADMIN']), reservasController.obtenerEspaciosGarita);
 
-// 2. Registrar el ingreso físico del vehículo (Exclusivo para el Vigilante o Administrador en Garita)
+// 2. Registrar el ingreso vehicular (Exclusivo Vigilante/Admin)
 router.post('/garita/registrar-ingreso', verificarRol(['GARITA', 'ADMIN']), reservasController.registrarIngresoVehiculo);
 
-// 3. Registrar la salida y liberar el espacio (Exclusivo para el Vigilante o Administrador en Garita)
+// 3. Registrar la salida y liberar el espacio (Exclusivo Vigilante/Admin)
 router.post('/garita/registrar-salida', verificarRol(['GARITA', 'ADMIN']), reservasController.registrarSalidaVehiculo);
 
-// 4. Crear una nueva reserva desde el panel del alumno (Exclusivo para Alumnos/Estudiantes)
+// 4. Crear una nueva reserva de slot (Exclusivo Estudiantes)
 router.post('/reservas/crear', verificarRol(['ESTUDIANTE']), reservasController.crearReservaAlumno);
 
-// 5. Cancelar una reserva activa por parte del alumno
+// 5. Cancelar una reserva activa voluntariamente (Exclusivo Estudiantes)
 router.post('/reservas/cancelar', verificarRol(['ESTUDIANTE']), reservasController.cancelarReservaAlumno);
 
+// 6. Consultar reservas del estudiante (Pantalla E06 - Mis Reservas)
+router.get('/reservas/mis-reservas', verificarRol(['ESTUDIANTE', 'ADMIN']), reservasController.listarMisReservas);
 
 module.exports = router;

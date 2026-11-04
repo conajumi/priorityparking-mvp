@@ -1,0 +1,7 @@
+// Manejo 404
+app.use((req, res) => {
+    res.status(404).render('404', { 
+        titulo: '404 No Encontrado',
+        url: req.originalUrl 
+    });
+});
