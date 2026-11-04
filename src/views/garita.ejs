@@ -1,0 +1,36 @@
+<%- include('partials/header') %>
+
+<link rel="stylesheet" href="/css/garita.css">
+
+<div class="container">
+    <h2>👮 Control de Garita - Sede Lima Centro</h2>
+    <div id="globalAlert" class="alert hidden"></div>
+
+    <div class="grid-layout">
+        <div>
+            <h3>📥 Registrar Ingreso Físico</h3>
+            <div class="form-group">
+                <label for="codigo_alumno">Código de Alumno</label>
+                <input type="text" id="codigo_alumno" placeholder="Ej: U20304050">
+            </div>
+            <div class="form-group">
+                <label for="id_espacio">ID de Espacio (Slot)</label>
+                <input type="text" id="id_espacio" placeholder="Ej: LC-P1-01">
+            </div>
+            <button id="btnRegistrarIngreso" type="button">Validar e Ingresar</button>
+        </div>
+
+        <div>
+            <h3>📊 Resumen de Planta</h3>
+            <p>Usa este panel para autorizar la entrada de vehículos con reserva activa o liberar los espacios manualmente cuando se retiren del campus.</p>
+            <button id="btnRefrescarMonitor" type="button" class="btn-secondary">🔄 Refrescar Monitor</button>
+        </div>
+    </div>
+
+    <h3>🗺️ Monitor de Estacionamientos en Tiempo Real</h3>
+    <div id="monitorMapa" class="map-grid"></div>
+</div>
+
+<script src="/js/garita.js"></script>
+
+<%- include('partials/footer') %>
