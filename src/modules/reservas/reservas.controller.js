@@ -1,14 +1,7 @@
 // src/modules/reservas/reservas.controller.js
-//const reservasService = require('./reservas.service'); 
-// 🚀 AGREGA ESTA LÍNEA EN LA LÍNEA 1 DE RESERVAS.CONTROLLER.JS:
 const pool = require('../../config/database'); 
 const reservasService = require('./reservas.service');
 
-
-/**
- * Validar Ingreso en Garita controlando los 20 minutos de tolerancia estricta
- * URL: POST /api/garita/registrar-ingreso
- */
 /**
  * Validar Ingreso en Garita controlando los 20 minutos de tolerancia estricta
  * URL: POST /api/garita/registrar-ingreso
@@ -23,7 +16,6 @@ async function registrarIngresoVehiculo(req, res) {
 
     const parametroAlumno = String(codigoAlumnoLimpio).trim();
     const parametroEspacio = String(idEspacioLimpio).trim();
-    // Fecha de hoy en Lima, formato YYYY-MM-DD
     const parametroFecha = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
 
     console.log(`[Garita] Buscando reserva: Alumno=${parametroAlumno}, Slot=${parametroEspacio}, Fecha=${parametroFecha}`);
@@ -32,7 +24,6 @@ async function registrarIngresoVehiculo(req, res) {
     try {
         await client.query('BEGIN');
 
-        // 1. Buscar y bloquear la reserva. La tolerancia (+20 min) se calcula en Lima dentro de SQL.
         const { rows } = await client.query(
             `SELECT id_reserva,
                     hora_llegada_programada::text AS hora_text,
@@ -56,7 +47,6 @@ async function registrarIngresoVehiculo(req, res) {
 
         const { id_reserva: idReserva, hora_text: horaProgramada, vencida } = rows[0];
 
-        // 2. Tolerancia vencida: expirar, liberar espacio y penalizar
         if (vencida) {
             await client.query(
                 `UPDATE reservas SET estado_reserva = 'EXPIRADA' WHERE id_reserva = $1`,
@@ -78,7 +68,6 @@ async function registrarIngresoVehiculo(req, res) {
             });
         }
 
-        // 3. A tiempo: reserva -> COMPLETADA y espacio -> OCUPADO
         await client.query(
             `UPDATE reservas SET estado_reserva = 'COMPLETADA' WHERE id_reserva = $1`,
             [idReserva]
@@ -163,8 +152,6 @@ async function crearReservaAlumno(req, res) {
     }
 
     try {
-
-        //await reservasService.ejecutarReservaTransaccional(codigo_alumno, id_espacio, otp_verificado, fecha_reserva, hora_llegada);
         const resultado = await reservasService.ejecutarReservaTransaccional(
             codigo_alumno,
             id_espacio,
@@ -175,9 +162,9 @@ async function crearReservaAlumno(req, res) {
 
         return res.status(200).json({ 
             success: true,
-            mensaje: `Reserva confirmada. El slot ${id_espacio} está separado para el día ${fecha_reserva} a las ${hora_llegada}). Tienes 20 min de tolerancia.`,
+            mensaje: `Reserva confirmada. El slot ${id_espacio} está separado para el día ${fecha_reserva} a las ${hora_llegada}. Tienes 20 min de tolerancia.`,
             reserva: resultado.reserva,
-            qrCode: resultado.qrCode // Llega el data:image/png;base64,...
+            qrCode: resultado.qrCode
         });
         
     } catch (error) {
@@ -185,7 +172,6 @@ async function crearReservaAlumno(req, res) {
         if (error.message.includes('unique_reserva_por_dia_alumno') || error.code === '23505') {
             return res.status(400).json({ error: `Ya cuentas con una reserva registrada para el día ${fecha_reserva}.` });
         }
-        //return res.status(500).json({ error: 'Fallo interno al procesar el registro de tu reserva.' });
         return res.status(500).json({ error: error.message || 'Fallo interno al procesar la reserva.' });
     }
 }
@@ -213,36 +199,31 @@ async function cancelarReservaAlumno(req, res) {
     }
 }
 
-// modules/reservas/reservas.controller.js
+/**
+ * Devuelve todas las reservas de un estudiante para la pantalla E06 (Mis Reservas).
+ * URL: GET /api/reservas/mis-reservas
+ */
+async function listarMisReservas(req, res) {
+    try {
+        const codigoAlumno = req.query.codigoAlumno || req.usuario?.codigoAlumno || req.body?.codigo_alumno;
 
-/** 
-const crearReserva = async (req, res) => {
-  try {
-    const datosReserva = req.body;
+        if (!codigoAlumno) {
+            return res.status(400).json({ error: 'Falta el parámetro obligatorio: codigoAlumno.' });
+        }
 
-    // Llamada a la función del service (ya sea crearReserva o ejecutarReservaTransaccional)
-    const resultado = await reservasService.crearReserva(datosReserva);
+        const reservas = await reservasService.obtenerReservasPorAlumno(String(codigoAlumno).trim());
+        return res.status(200).json(reservas);
+    } catch (error) {
+        console.error('[Reservas Controller Error - listarMisReservas]:', error.message);
+        return res.status(500).json({ error: 'Fallo interno al consultar el listado de reservas.' });
+    }
+}
 
-    return res.status(201).json({
-      success: true,
-      message: 'Reserva generada con éxito',
-      reserva: resultado.reserva,
-      qrCode: resultado.qrCode // Llega el data:image/png;base64,...
-    });
-  } catch (error) {
-    console.error('Error al registrar reserva en el controlador:', error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Error interno del servidor al procesar la reserva'
-    });
-  }
-};
-*/
 module.exports = {
     registrarIngresoVehiculo,
     registrarSalidaVehiculo,
     obtenerEspaciosGarita,
     crearReservaAlumno,
-    cancelarReservaAlumno
-    //crearReserva
+    cancelarReservaAlumno,
+    listarMisReservas
 };
