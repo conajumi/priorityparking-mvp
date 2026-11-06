@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof titulo !== 'undefined' ? titulo : 'PriorityParking - Panel Alumno' %></title>
+    <link rel="stylesheet" href="/css/reserva.css">
+</head>
+<body>
+<div style="margin-bottom: 1rem;">
+    <a href="/dashboard" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; text-decoration: none; color: #1e293b; font-weight: 600; font-size: 0.85rem;">
+        &larr; Volver al Dashboard
+    </a>
+</div>
+    <div class="container">
+        <div class="header">
+            <h2>🗺️ Reserva tu Espacio en Tiempo Real - Sede Lima Centro</h2>
+            <button id="btnLogout" class="btn-logout" type="button">Cerrar Sesión</button>
+        </div>
+        
+        <p>Sesión activa: <span id="displayCodigo" class="user-session-text"></span></p>
+        
+        <div class="control-panel">
+            <div>
+                <label for="fechaLlegada" class="input-label">📅 Fecha de Reserva:</label>
+                <input type="date" id="fechaLlegada" class="input-field" readonly>
+            </div>
+            
+            <div>
+                <label for="horaLlegada" class="input-label">⏰ ¿A qué hora llegas? (20 min de tolerancia):</label>
+                <input type="time" id="horaLlegada" class="input-field">
+            </div>
+
+            <div style="text-align: right; margin-top: 5px;">
+                <button id="btnCancelarReserva" class="btn-cancel" type="button">
+                    ❌ Cancelar mi Reserva de esta Fecha
+                </button>
+            </div>
+        </div>
+
+        <div id="panelAlert" class="alert hidden"></div>
+        <div class="map-grid" id="contenedorMapa">Cargando espacios...</div>
+    </div>
+
+    <!-- Modal QR -->
+    <div id="modal-confirmacion-qr" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-header-text">¡Reserva Confirmada!</h3>
+        <p>Presenta este código en garita al momento de ingresar:</p>
+        
+        <div style="margin: 15px 0;">
+          <img id="qr-reserva-img" class="qr-image" src="" alt="Código QR de Reserva" />
+        </div>
+
+        <div class="modal-details">
+          <p><strong>Plaza:</strong> <span id="qr-plaza-id"></span></p>
+          <p><strong>Fecha:</strong> <span id="qr-fecha"></span></p>
+          <p><strong>Estado:</strong> <span id="qr-estado" class="status-badge">PENDIENTE</span></p>
+        </div>
+
+        <button id="btn-cerrar-qr" type="button" class="btn-modal-close">
+          Aceptar y Continuar
+        </button>
+      </div>
+    </div>
+
+    <script src="/js/reserva.js"></script>
+</body>
+</html>

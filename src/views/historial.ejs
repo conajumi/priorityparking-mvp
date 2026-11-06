@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof titulo !== 'undefined' ? titulo : 'Historial y Penalidades - ParkingU' %></title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/historial.css">
+</head>
+<body>
+    <header class="top-nav">
+        <div class="logo">ParkingU</div>
+        <div class="user-profile">
+            <span class="avatar">JP</span>
+            <span class="user-name" id="userNameLabel">Estudiante</span>
+            <button id="btnCerrarSesion" class="btn-logout">Salir</button>
+        </div>
+    </header>
+
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+                <a href="/dashboard" class="nav-item">Dashboard</a>
+                <a href="/reserva" class="nav-item">Nueva reserva</a>
+                <a href="/mis-reservas" class="nav-item">Mis reservas</a>
+                <a href="/prioridad" class="nav-item">Mi prioridad</a>
+                <a href="/historial" class="nav-item active">Historial</a>
+            </nav>
+        </aside>
+
+        <!-- Contenido principal E08 -->
+        <main class="main-content">
+            <!-- Botón de retroceso -->
+            <div class="top-action-bar">
+                <a href="/dashboard" class="btn-retroceder">
+                    &larr; Volver al Menú Principal
+                </a>
+            </div>
+
+            <div class="historial-card">
+                <!-- Filtros del Mockup -->
+                <div class="filtros-container">
+                    <button class="btn-filtro active" data-filtro="TODOS">Todos</button>
+                    <button class="btn-filtro" data-filtro="RESERVAS">Reservas</button>
+                    <button class="btn-filtro" data-filtro="CANCELACIONES">Cancelaciones</button>
+                    <button class="btn-filtro" data-filtro="PENALIDADES">Penalidades</button>
+                </div>
+
+                <!-- Tabla -->
+                <div class="tabla-responsive">
+                    <table class="tabla-historial">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaHistorialBody">
+                            <tr>
+                                <td colspan="4" class="empty-state">Cargando historial...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/historial.js"></script>
+</body>
+</html>

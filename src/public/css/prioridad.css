@@ -1,0 +1,147 @@
+/* Barra de retroceso */
+.top-action-bar {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.btn-retroceder {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-retroceder:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+/* Tarjeta contenedora de la vista E07 */
+.prioridad-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Bloque Superior Verde: Prioridad Actual */
+.hero-prioridad {
+    background-color: #dcfce7;
+    border-radius: 12px;
+    padding: 1.75rem;
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.hero-label {
+    font-size: 0.95rem;
+    color: #15803d;
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+}
+
+.hero-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #166534;
+}
+
+/* Grilla 2x2 para las métricas */
+.metricas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.metrica-box {
+    background-color: #f8fafc;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 105px;
+}
+
+.metrica-label {
+    font-size: 0.95rem;
+    color: #334155;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+/* Barras de Progreso */
+.progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background-color: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: #1e3a8a;
+    border-radius: 999px;
+}
+
+.metrica-subtext {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* Insignias y Enlaces de Detalle */
+.badge-al-dia {
+    align-self: flex-start;
+    background-color: #dcfce7;
+    color: #15803d;
+    padding: 0.25rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.penalidades-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.penalidades-num {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.link-detalle {
+    font-size: 0.9rem;
+    color: #2563eb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.link-detalle:hover {
+    text-decoration: underline;
+}
+
+/* Pie Informativo */
+.footer-nota {
+    text-align: center;
+    font-size: 0.88rem;
+    color: #94a3b8;
+    margin-top: 1rem;
+}

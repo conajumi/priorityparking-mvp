@@ -1,50 +1,84 @@
 // src/modules/estacionales/espacios.service.js
-const pool = require('../../config/database');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 /**
  * Consulta en la base de datos la lista completa de slots de Lima Centro.
  */
 async function obtenerTodosLosEspacios() {
-    const query = `
-        SELECT id_espacio, piso, numero_slot, estado, tipo_vehiculo 
-        FROM espacios_estacionamiento 
-        ORDER BY piso ASC, numero_slot ASC
-    `;
-    const { rows } = await pool.query(query);
-    return rows;
+    const espacios = await prisma.espacioEstacionamiento.findMany({
+        select: {
+            idEspacio: true,
+            piso: true,
+            numeroSlot: true,
+            estado: true,
+            tipoVehiculo: true
+        },
+        orderBy: [
+            { piso: 'asc' },
+            { numeroSlot: 'asc' }
+        ]
+    });
+
+    // Mapeo para que el frontend mantenga los nombres snake_case de las propiedades
+    return espacios.map(e => ({
+        id_espacio: e.idEspacio,
+        piso: e.piso,
+        numero_slot: e.numeroSlot,
+        estado: e.estado,
+        tipo_vehiculo: e.tipoVehiculo
+    }));
 }
 
 /**
  * Filtra los espacios específicos de un piso determinado.
  */
 async function obtenerEspaciosPorPiso(piso) {
-    const query = `
-        SELECT id_espacio, piso, numero_slot, estado, tipo_vehiculo 
-        FROM espacios_estacionamiento 
-        WHERE piso = $1
-        ORDER BY numero_slot ASC
-    `;
-    const { rows } = await pool.query(query, [piso]);
-    return rows;
+    const espacios = await prisma.espacioEstacionamiento.findMany({
+        where: {
+            piso: parseInt(piso, 10)
+        },
+        select: {
+            idEspacio: true,
+            piso: true,
+            numeroSlot: true,
+            estado: true,
+            tipoVehiculo: true
+        },
+        orderBy: {
+            numeroSlot: 'asc'
+        }
+    });
+
+    return espacios.map(e => ({
+        id_espacio: e.idEspacio,
+        piso: e.piso,
+        numero_slot: e.numeroSlot,
+        estado: e.estado,
+        tipo_vehiculo: e.tipoVehiculo
+    }));
 }
 
 /**
  * Modifica el estado de un slot en la base de datos (Ej: De DISPONIBLE a MANTENIMIENTO)
  */
 async function modificarEstadoFisico(idEspacio, nuevoEstado) {
-    const query = `
-        UPDATE espacios_estacionamiento 
-        SET estado = $2 
-        WHERE id_espacio = $1
-        RETURNING *
-    `;
-    const { rows } = await pool.query(query, [idEspacio, nuevoEstado.toUpperCase()]);
-    
-    if (rows.length === 0) {
-        throw new Error(`El espacio con ID ${idEspacio} no existe en la sede.`);
-    }
-    
-    return rows[0];
+    const actualizado = await prisma.espacioEstacionamiento.update({
+        where: {
+            idEspacio: idEspacio
+        },
+        data: {
+            estado: nuevoEstado.toUpperCase()
+        }
+    });
+
+    return {
+        id_espacio: actualizado.idEspacio,
+        piso: actualizado.piso,
+        numero_slot: actualizado.numeroSlot,
+        estado: actualizado.estado,
+        tipo_vehiculo: actualizado.tipoVehiculo
+    };
 }
 
 module.exports = {

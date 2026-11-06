@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof titulo !== 'undefined' ? titulo : 'Mi Prioridad - ParkingU' %></title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/prioridad.css">
+</head>
+<body>
+    <header class="top-nav">
+        <div class="logo">ParkingU</div>
+        <div class="user-profile">
+            <span class="avatar">JP</span>
+            <span class="user-name" id="userNameLabel">Estudiante</span>
+            <button id="btnCerrarSesion" class="btn-logout">Salir</button>
+        </div>
+    </header>
+
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+                <a href="/dashboard" class="nav-item">Dashboard</a>
+                <a href="/reserva" class="nav-item">Nueva reserva</a>
+                <a href="/mis-reservas" class="nav-item">Mis reservas</a>
+                <a href="/prioridad" class="nav-item active">Mi prioridad</a>
+                <a href="#" class="nav-item">Historial</a>
+            </nav>
+        </aside>
+
+        <!-- Contenido E07 -->
+        <main class="main-content">
+            <div class="top-action-bar">
+                <a href="/dashboard" class="btn-retroceder">
+                    &larr; Volver al Menú Principal
+                </a>
+            </div>
+
+            <div class="prioridad-card">
+                <!-- Bloque Prioridad Actual -->
+                <div class="hero-prioridad">
+                    <div class="hero-label">Prioridad actual</div>
+                    <div class="hero-value">Alta</div>
+                </div>
+
+                <!-- Grilla 2x2 -->
+                <div class="metricas-grid">
+                    <!-- Mérito académico -->
+                    <div class="metrica-box">
+                        <span class="metrica-label">Mérito académico</span>
+                        <div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: 85%;"></div>
+                            </div>
+                            <span class="metrica-subtext">17/20</span>
+                        </div>
+                    </div>
+
+                    <!-- Asistencia -->
+                    <div class="metrica-box">
+                        <span class="metrica-label">Asistencia</span>
+                        <div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: 92%;"></div>
+                            </div>
+                            <span class="metrica-subtext">92%</span>
+                        </div>
+                    </div>
+
+                    <!-- Condición de pensiones -->
+                    <div class="metrica-box">
+                        <span class="metrica-label">Condición de pensiones</span>
+                        <span class="badge-al-dia">Al día</span>
+                    </div>
+
+                    <!-- Penalidades -->
+                    <div class="metrica-box">
+                        <span class="metrica-label">Penalidades</span>
+                        <div class="penalidades-row">
+                            <span class="penalidades-num">0</span>
+                            <span style="color: #64748b;">·</span>
+                            <a href="#" id="linkVerDetalle" class="link-detalle">ver detalle</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensaje al pie -->
+                <p class="footer-nota">Tu prioridad se recalcula automáticamente cada periodo académico</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/prioridad.js"></script>
+</body>
+</html>
