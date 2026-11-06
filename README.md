@@ -4,18 +4,20 @@
 
 Este MVP permite a los estudiantes que cumplen con los criterios de excelencia académica, asistencia y puntualidad financiera, reservar un espacio de estacionamiento en tiempo real para la sede de **Lima Centro**.
 
-# Pruebas de acceso para el docente:
+## Pruebas de acceso para el docente:
 
-Acceso como usuario de parking:
+# Acceso como usuario de parking:
 
 Ruta Railway: https://priorityparking-mvp-production.up.railway.app/login
 
 Usuario: C29736@utp.edu.pe
 Codigo OTP: 000000  
 
-Acceso como Seguridad:
+# Acceso como Seguridad:
 
-Ruta Railway Garita: https://priorityparking-mvp-production.up.railway.app/login-garita
+* **Opcion:1**    por la misma pantalla del login de los estudiantes en la parte inferior donde dice "Otros accesos del sistema" -> Garita
+
+* **Opcion:2**    Ruta Railway Garita: https://priorityparking-mvp-production.up.railway.app/login-garita
 
 Usuario: UTP-GARITA (EN MAYUSCULAS)
 Contraseña: GARITA2026 (EN MAYUSCULAS)
