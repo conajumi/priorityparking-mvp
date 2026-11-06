@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof titulo !== 'undefined' ? titulo : 'PriorityParking - Acceso Administrador' %></title>
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="logo-title">🛡️ Panel Admin</div>
+        <div class="subtitle">Gestión y Configuración del Sistema</div>
+        
+        <div id="alertBox" class="alert hidden"></div>
+
+        <form id="formAdminLogin">
+            <div class="form-group">
+                <label for="adminUsuario">Usuario Administrador</label>
+                <input type="text" id="adminUsuario" placeholder="Ej: admin_utp" required>
+            </div>
+            <div class="form-group">
+                <label for="adminPassword">Contraseña Maestra</label>
+                <input type="password" id="adminPassword" placeholder="••••••••" required>
+            </div>
+            <button id="btnIngresarAdmin" type="submit">Acceder al Sistema</button>
+        </form>
+
+        <div class="switch-login">
+            <p>Otros accesos del sistema</p>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 5px;">
+                <a href="/login" id="link-login-alumnos">&larr; Alumnos (OTP)</a>
+                <span style="color: #cbd5e1;">|</span>
+                <a href="/login-garita" id="link-login-garita">Garita</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formAdminLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usuario = document.getElementById('adminUsuario').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+            const alertBox = document.getElementById('alertBox');
+
+            if (!usuario || !password) {
+                alertBox.innerText = 'Por favor, ingrese todas las credenciales.';
+                alertBox.className = 'alert error';
+                alertBox.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Reutiliza la validación por API o apunta al endpoint de admin
+                const res = await fetch('/api/auth/verificar-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigoAlumno: usuario, otp: password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'Credenciales administrativas inválidas.');
+
+                sessionStorage.setItem('operadorLogueado', usuario);
+                sessionStorage.setItem('tokenSession', data.token);
+                sessionStorage.setItem('rolUsuario', 'ADMIN');
+
+                alertBox.innerText = 'Autenticación exitosa. Redirigiendo...';
+                alertBox.className = 'alert success';
+                alertBox.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1200);
+
+            } catch (err) {
+                alertBox.innerText = err.message;
+                alertBox.className = 'alert error';
+                alertBox.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
