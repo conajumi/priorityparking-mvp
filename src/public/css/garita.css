@@ -15,12 +15,42 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
-h2 {
-    color: #63b3ed;
-    text-align: center;
+/* Cabecera y Botón de Salida */
+.garita-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 2px solid #4a5568;
-    padding-bottom: 10px;
-    margin-top: 0;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.garita-header h2 {
+    color: #63b3ed;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    text-align: left;
+    font-size: 24px;
+}
+
+.btn-logout {
+    width: auto;
+    padding: 8px 16px;
+    background: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-logout:hover {
+    background: #c53030;
 }
 
 h3 {

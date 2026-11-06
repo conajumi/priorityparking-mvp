@@ -54,14 +54,14 @@ app.get('/login-garita', (req, res) => {
     });
 });
 
-// Ruta Login Garita (Vigilancia)
-app.get('/login-garita', (req, res) => {
-    res.render('login-garita', { 
-        titulo: 'Acceso Garita - PriorityParking' 
+// 6. Ruta Panel Monitor de Garita
+app.get('/garita', (req, res) => {
+    res.render('garita', { 
+        titulo: 'Panel de Garita - PriorityParking' 
     });
 });
 
-// Ruta Login Administrador
+// 7. Ruta Login Administrador
 app.get('/login-admin', (req, res) => {
     res.render('login-admin', { 
         titulo: 'Acceso Administrativo - PriorityParking' 
@@ -79,6 +79,7 @@ app.get('/prioridad', (req, res) => {
 app.get('/historial', (req, res) => {
     res.render('historial', { titulo: 'Historial y Penalidades - ParkingU' });
 });
+
 // -------------------------------------------------------------
 // RUTAS DE LA API Y MANEJO DE ERRORES
 // -------------------------------------------------------------

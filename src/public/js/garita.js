@@ -12,10 +12,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enlazar eventos de botones
     document.getElementById('btnRegistrarIngreso').addEventListener('click', registrarIngreso);
     document.getElementById('btnRefrescarMonitor').addEventListener('click', cargarMapaMonitoreo);
+    
+    const btnLogout = document.getElementById('btnCerrarSesion');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', cerrarSesion);
+    }
 
     // Carga inicial
     cargarMapaMonitoreo();
 });
+
+function cerrarSesion() {
+    sessionStorage.removeItem('operadorLogueado');
+    sessionStorage.removeItem('tokenSession');
+    sessionStorage.removeItem('rolUsuario');
+    window.location.href = '/login-garita';
+}
 
 function mostrarAlerta(mensaje, tipo) {
     const el = document.getElementById('globalAlert');
