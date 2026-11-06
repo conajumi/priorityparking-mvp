@@ -8,14 +8,14 @@ Este MVP permite a los estudiantes que cumplen con los criterios de excelencia a
 
 Acceso como usuario de parking:
 
-Ruta Railway: https://priorityparking-mvp-production.up.railway.app/login.html
+Ruta Railway: https://priorityparking-mvp-production.up.railway.app/login
 
 Usuario: C29736@utp.edu.pe
 Codigo OTP: 000000  
 
 Acceso como Seguridad:
 
-Ruta Railway Garita: https://priorityparking-mvp-production.up.railway.app/login-garita.html
+Ruta Railway Garita: https://priorityparking-mvp-production.up.railway.app/login-garita
 
 Usuario: UTP-GARITA (EN MAYUSCULAS)
 Contraseña: GARITA2026 (EN MAYUSCULAS)
