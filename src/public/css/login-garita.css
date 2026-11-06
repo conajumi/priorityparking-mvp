@@ -106,3 +106,42 @@ button:hover {
 .hidden {
     display: none;
 }
+
+/* Enlaces de cambio de sesión */
+.switch-login {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #4a5568;
+    text-align: center;
+}
+
+.switch-login p {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    color: #a0aec0;
+}
+
+.switch-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.switch-links a {
+    color: #63b3ed;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.switch-links a:hover {
+    color: #90cdf4;
+    text-decoration: underline;
+}
+
+.switch-links .divider {
+    color: #718096;
+    font-size: 13px;
+}

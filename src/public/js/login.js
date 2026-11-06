@@ -3,6 +3,16 @@ let codigoAlumnoDetectado = '';
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSolicitarOtp').addEventListener('click', enviarCorreo);
     document.getElementById('btnVerificarOtp').addEventListener('click', enviarOtp);
+    
+    const btnVolver = document.getElementById('btnVolverEmail');
+    if (btnVolver) {
+        btnVolver.addEventListener('click', () => {
+            document.getElementById('groupOtp').classList.add('hidden');
+            document.getElementById('groupEmail').classList.remove('hidden');
+            document.getElementById('alertBox').classList.add('hidden');
+            document.getElementById('otp').value = '';
+        });
+    }
 });
 
 function mostrarMensaje(texto, tipo) {
